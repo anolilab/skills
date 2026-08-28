@@ -8,9 +8,10 @@
   },
   "plugins": [
     {
-      "name": "anolilab-skills",
-      "source": "./",
-      "description": "Skills for real engineers.",
+      "name": "deslop",
+      "source": "./deslop",
+      "description": "Removes AI-generated slop from a branch's changes without altering behaviour, optionally running itself when a turn ends.",
+      "category": "developer-tools",
       "license": "MIT"
     }
   ]

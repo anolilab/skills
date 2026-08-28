@@ -63,12 +63,13 @@ npx skills add anolilab/skills --skill deslop
 
 ### Claude Code plugin
 
-The plugin route also brings the hook that runs `deslop` automatically (see below),
-which the `npx` route does not.
+Each skill is packaged as its own plugin, so you install only what you want. The
+plugin route also brings the hook that runs `deslop` automatically (see below), which
+the `npx` route does not.
 
 ```
 /plugin marketplace add anolilab/skills
-/plugin install anolilab-skills@anolilab
+/plugin install deslop@anolilab
 ```
 
 ### Without installing
@@ -98,21 +99,23 @@ only when Claude judges it relevant or when you ask for it by name.
 
 ## Layout
 
+One self-contained plugin directory per capability, each owning its skills, hooks,
+and evals.
+
 ```
 .claude-plugin/
-├── marketplace.json     # Claude Code marketplace, one plugin sourced from the repo root
-└── plugin.json          # that plugin's manifest; skills/ is scanned by default
-hooks/
-├── hooks.json           # plugin hooks
-└── auto-deslop.sh
-skills/
-└── <skill-name>/
+└── marketplace.json     # lists every plugin by directory
+deslop/
+├── .claude-plugin/plugin.json
+├── evals/               # graded cases for the skill
+├── hooks/               # hooks.json + the Stop hook script
+└── skills/deslop/
     ├── SKILL.md         # name + description frontmatter, then the instructions
-    └── references/      # optional, loaded on demand rather than up front
+    └── references/      # loaded on demand rather than up front
 ```
 
-Both install paths read the same `skills/` tree, so a new skill needs no manifest
-changes. Drop it in and each one picks it up.
+The `npx` installer copies only `skills/`, so hooks and evals sit at the plugin level
+where they belong to the plugin rather than to the skill.
 
 ## Contributing
 

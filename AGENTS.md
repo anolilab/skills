@@ -5,21 +5,39 @@ landing here is a shipped artifact, not a scratch note.
 
 ## Layout
 
+One directory per plugin at the repo root, each self-contained. A plugin owns its
+skills, its hooks, and its evals, so someone can install `deslop` without also taking
+on whatever else lives here.
+
 ```
 .claude-plugin/
-├── marketplace.json     # Claude Code marketplace; one plugin sourced from the repo root
-└── plugin.json          # that plugin's manifest
-hooks/
-├── hooks.json           # plugin-level hooks, auto-discovered from this path
-└── *.sh                 # hook scripts, executable
-skills/
-└── <skill-name>/
-    ├── SKILL.md
-    └── references/      # optional, read only once the skill is running
+└── marketplace.json     # lists every plugin by directory
+<plugin-name>/
+├── .claude-plugin/
+│   └── plugin.json      # declares ./skills/ and ./hooks/hooks.json
+├── hooks/               # optional
+│   ├── hooks.json
+│   └── *.sh             # executable
+├── evals/
+│   ├── README.md
+│   └── <case>/
+│       ├── prompt.md
+│       ├── scaffold.sh
+│       └── graders/criteria.md
+└── skills/
+    └── <skill-name>/
+        ├── SKILL.md
+        └── references/  # optional, read only once the skill is running
 ```
 
-Both install paths read `skills/`, so a new skill needs no manifest edit. Add the
-directory and it is picked up by `npx skills add` and by the Claude Code plugin alike.
+A skill directory holds only `SKILL.md` and its references. That is all the `npx`
+installer copies, and it is why hooks and evals sit at the plugin level instead.
+
+**A new plugin needs a `marketplace.json` entry.** A new skill inside an existing
+plugin does not, because `plugin.json` points at the whole `skills/` directory.
+
+Group skills into one plugin when they share hooks or are always wanted together.
+Split them when someone would reasonably want one and not the other.
 
 ## Adding a skill
 
@@ -91,20 +109,35 @@ need a higher bar than a skill does:
   the branch actually has changes.
 - Mark scripts executable (`chmod +x`) and commit the bit.
 
-## Before opening a PR
+## Evals
+
+Every skill gets at least three cases under `<plugin>/evals/<case>/`, each with a
+`prompt.md`, a `graders/criteria.md`, and a `scaffold.sh` that builds a throwaway
+repo for the case to act on. Mark the scaffolds executable.
+
+Write graders as **Passes** and **Fails** lists of observable outcomes, not
+impressions. "The `try`/`catch` around `JSON.parse` is untouched" can be checked;
+"handles errors sensibly" cannot.
+
+At least one case must be a **negative case**: input the skill should leave alone. A
+suite of only positive cases rewards an over-eager skill, and over-eagerness is the
+usual way a skill goes wrong.
 
 ```bash
-claude plugin validate . --strict     # manifests
-npx skills add . --list               # discovery and frontmatter
-bash -n hooks/*.sh                    # hook syntax
+claude plugin validate . --strict          # manifests
+npx skills add . --list                    # discovery and frontmatter
+bash -n <plugin>/hooks/*.sh                # hook syntax
+claude plugin eval ./<plugin> --scaffold   # cases, when enabled for your account
 ```
 
-Check that the description renders sensibly in the `--list` output, since that is
-roughly what an agent sees when deciding whether to fire the skill.
+`--scaffold` runs author-supplied bash as you, so read the scaffolds first. The
+runner adds a no-plugin baseline arm: if a case scores the same without the plugin,
+the skill is not earning its place on that case.
 
-Test a skill by installing it and using it on a real task, not by reading it. The
-failure mode you are looking for is the skill not triggering when it should, or
-triggering when it should not.
+Check that the description reads sensibly in the `--list` output, since that is
+roughly what an agent sees when deciding whether to fire the skill. Then test on a
+real task, not by reading. The failure you are hunting is the skill not firing when
+it should, or firing when it should not.
 
 ## Commit messages
 
