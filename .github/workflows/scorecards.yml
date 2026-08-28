@@ -1,0 +1,22 @@
+"name": "Scorecards supply-chain security"
+
+"on":
+    "branch_protection_rule": ~
+    "schedule":
+        - "cron": "37 14 * * 6"
+    "push":
+        "branches": ["main"]
+
+"permissions": {}
+
+"jobs":
+    "scorecards":
+        "permissions":
+            "security-events": "write"
+            "id-token": "write"
+            "actions": "read"
+            "contents": "read"
+        "uses": "anolilab/workflows/.github/workflows/scorecards.yml@9037c2643e28b71d6f625f73686676a9c39761c2" # v23.0.2
+        "with":
+            "branch": "main"
+            "publish_results": true

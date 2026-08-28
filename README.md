@@ -130,7 +130,8 @@ npx skills add . --list
 ```
 
 CI runs all three on every pull request, plus a shell syntax check and a step that
-executes every eval scaffold.
+executes every eval scaffold. Pull request titles follow
+[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## License
 

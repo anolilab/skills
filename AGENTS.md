@@ -134,6 +134,19 @@ The first three run in CI on every pull request, along with a shell syntax check
 and a step that executes every `scaffold.sh` and fails any that produces an empty
 diff. `validate-package.py` needs no dependencies and no network.
 
+Three other workflows run alongside it, all calling the shared definitions in
+`anolilab/workflows`: a Conventional Commits check on the pull request title,
+`zizmor` over these workflow files, and an OSSF scorecard.
+
+The org's `dependency-review` workflow is deliberately **not** here. This repo has
+no dependency manifest, so the check has nothing to read, and it fails outright
+until Dependency graph is switched on in the repository settings. Add it back in
+the same commit that introduces the first `package.json` or `pyproject.toml`, and
+turn the setting on at the same time.
+
+**Pull request titles must follow Conventional Commits**, because the title is
+what the check reads: `feat(deslop): ...`, `fix: ...`, `ci: ...`, `docs: ...`.
+
 What it enforces, so you do not have to remember it: frontmatter limits and the
 name matching its directory, the 500-line skill body, references linked from
 `SKILL.md` and existing, a `## Contents` heading on references over 100 lines, no

@@ -1,0 +1,14 @@
+# Zizmor static analyzer config.
+# https://docs.zizmor.sh/configuration/
+
+rules:
+    dangerous-triggers:
+        # pull_request_target is required here: the PR title check needs write
+        # access to statuses and comments, and that has to work for pull
+        # requests opened from forks. The pattern that makes the trigger
+        # dangerous is checking out a fork-controlled ref and running it with
+        # the base repository's token. Neither this caller nor the reusable
+        # workflow it calls checks out any code, so there is nothing for a fork
+        # to take over. Keep it that way.
+        ignore:
+            - "semantic-pull-request.yml"
