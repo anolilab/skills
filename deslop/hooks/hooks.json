@@ -1,0 +1,16 @@
+{
+  "description": "Runs the deslop skill automatically when a turn ends having changed code on the branch.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-deslop.sh",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

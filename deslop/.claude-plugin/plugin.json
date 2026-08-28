@@ -1,0 +1,17 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "deslop",
+  "displayName": "Deslop",
+  "description": "Removes AI-generated slop from a branch's changes without altering behaviour: narrating comments, needless defensive code, casts that dodge the type system, single-use abstractions, and over-mocked tests.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Anolilab",
+    "url": "https://github.com/anolilab"
+  },
+  "homepage": "https://github.com/anolilab/skills/tree/main/deslop",
+  "repository": "https://github.com/anolilab/skills",
+  "license": "MIT",
+  "keywords": ["deslop", "code-quality", "review", "hooks"],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}

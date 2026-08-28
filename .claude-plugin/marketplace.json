@@ -1,0 +1,18 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "anolilab",
+  "description": "Skills for real engineers.",
+  "owner": {
+    "name": "Anolilab",
+    "url": "https://github.com/anolilab"
+  },
+  "plugins": [
+    {
+      "name": "deslop",
+      "source": "./deslop",
+      "description": "Removes AI-generated slop from a branch's changes without altering behaviour, optionally running itself when a turn ends.",
+      "category": "developer-tools",
+      "license": "MIT"
+    }
+  ]
+}
