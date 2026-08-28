@@ -108,12 +108,17 @@ Size is not a reason to skip. If removing a single-use abstraction means touchin
 twelve call sites, touch twelve call sites. If the fix is deleting one comment, delete
 the one comment. A pass that only picks off the comments is a failed pass.
 
-The one thing that caps scope: **behaviour must not change.** If a cleanup would alter
-observable behaviour, leave it and report it instead. The two exceptions:
+The one thing that caps scope: **behaviour must not change** for any input that already
+satisfied the code's contract. If a cleanup would alter that, leave it and report it
+instead.
 
-- The slop is itself a bug (a swallowed error, an unreachable branch, a cast that hides
-  a real mismatch). Fix it and say so.
-- The user explicitly asked for behaviour changes too.
+Inputs that were already violating the contract are the exception, and the catalog's
+own remedy depends on it. Replacing a cast with a real parse makes malformed input
+throw where it used to slide through mistyped, which is the point: the cast was
+claiming something nobody had checked. Same for a swallowed error or an unreachable
+branch. Make the failure loud, and say so in the report.
+
+The other exception is the user asking for behaviour changes too.
 
 ### 5. Verify
 
@@ -125,12 +130,14 @@ your edits, say that explicitly.
 Then read your own diff (`git diff`) against these four questions. Each one catches a
 failure the removal rules above cannot see on their own.
 
-**Did a removal cost the code something real?** The rules above only ask whether a line
-looks like slop. Ask the reverse: does the file now know less than it did? A comment
-that recorded an ordering requirement, a guard that was the only handling of a real
-edge case, a three-item list whose three items were genuinely distinct, a named
-intermediate a profiler or debugger relied on. Losing one of those is a defect, not a
-cleanup, even when the shape you removed was slop-shaped. Put it back.
+**Did a removal cost the code something real?** Removing what the catalog names is the
+job, and a comment that only restated its line took nothing with it. This question is
+about collateral loss: meaning that was riding along with the slop-shaped thing rather
+than being it. A comment that restated its line *and* recorded an ordering
+requirement. A guard that was redundant *and* the only handling of a real edge case.
+A three-item list that looked padded but whose three items were distinct. The catalog
+cannot see these, because they look exactly like the patterns it rejects. Losing one
+is a defect rather than a cleanup, so put it back and keep the rest of the removal.
 
 **Did I edit text that was data rather than code?** Slop-shaped strings inside
 fixtures, snapshots, expected-output files, and documentation *about* bad code are
