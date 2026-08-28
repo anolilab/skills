@@ -415,6 +415,17 @@ Applies to README, docs, comments-as-docs, PR descriptions, and commit messages 
   built from three clauses.
 - Restating the diff as documentation: "This PR adds a new function that..."
 - Summary sections at the bottom of a doc that repeat the doc.
+- Chatbot leftovers: "as an AI language model", "as of my last update", "knowledge
+  cutoff", an apology for being unable to browse. Also the markup debris a paste
+  drags along, such as `contentReference`, `oaicite`, `turn0search`, and
+  `utm_source=` parameters on links.
+- Unfilled placeholders the generator left behind: `// Your code here`, `TODO: fill
+  in`, `<!-- describe this -->`, lorem ipsum, a `[link text](url)` never pointed
+  anywhere.
+
+The last two are defects rather than style calls. Nobody chose them, so there is no
+local convention that could make them correct, and the only judgement needed is
+whether the text is genuinely data (see the note at the top of this file).
 
 ### Not slop
 
