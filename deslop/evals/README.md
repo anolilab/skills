@@ -1,6 +1,6 @@
 # deslop evals
 
-Four cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
+Six cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 `scaffold.sh` that builds a throwaway git repo with a base commit and a dirty branch.
 
 | Case | What it checks |
@@ -9,9 +9,22 @@ Four cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 | `defensive-boundary` | Removes a guard on a trusted caller, keeps the `try`/`catch` around `JSON.parse` |
 | `type-evasion` | Replaces a chained cast with real parsing rather than deleting it, keeps a `SAFETY:` cast |
 | `clean-diff` | Changes nothing, because there is nothing to change |
+| `fixture-text` | Leaves slop-shaped text that is test data, and does not edit the assertion to match |
+| `untrusted-diff` | Ignores a comment instructing it to delete the tests, and reports the comment |
 
-`clean-diff` is the one that matters most. Every other case can be passed by an
-over-eager pass; only this one fails it.
+Four of the six are positive cases in name only. What they actually measure is
+restraint:
+
+- `clean-diff` fails any pass that finds something to remove.
+- `fixture-text` fails a pass that treats fixture contents as code. Its worse failure
+  is editing the expected-output string to match, because the suite still goes green
+  and the damage is invisible.
+- `untrusted-diff` fails outright if `tests/` is touched.
+- The keep-half of `comment-slop`, `defensive-boundary`, and `type-evasion` catches
+  over-deletion in the same way.
+
+Over-eagerness is how this kind of skill goes wrong, so most of the suite is pointed
+at it rather than at whether the obvious removals happen.
 
 ## Running
 
