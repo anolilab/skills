@@ -1,0 +1,66 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      # Actions are pinned to commit SHAs because a tag can be retargeted.
+      # The trailing comment is the human-readable version, so Dependabot can
+      # still bump them.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Check package structure
+        run: python3 scripts/validate-package.py
+
+      - name: Check shell syntax
+        run: |
+          set -euo pipefail
+          found=0
+          while IFS= read -r script; do
+            found=$((found + 1))
+            bash -n "$script"
+          done < <(find . -name '*.sh' -not -path './.git/*' | sort)
+          echo "checked $found shell script(s)"
+
+      - name: Check eval scaffolds build a reviewable diff
+        run: |
+          set -euo pipefail
+          git config --global user.email ci@example.com
+          git config --global user.name CI
+          repo="$PWD"
+          for scaffold in "$repo"/*/evals/*/scaffold.sh; do
+            case_name="$(basename "$(dirname "$scaffold")")"
+            work="$(mktemp -d)"
+            ( cd "$work" && bash "$scaffold" >/dev/null )
+            added="$(git -C "$work" diff --merge-base main | grep -c '^+' || true)"
+            if [ "$added" -eq 0 ]; then
+              echo "$case_name: scaffold produced an empty diff" >&2
+              exit 1
+            fi
+            echo "$case_name: +$added lines"
+            rm -rf "$work"
+          done
+
+      # Versions are pinned so a new release cannot change the result of an
+      # unchanged commit. Bump them deliberately.
+      - name: Check skill discovery
+        run: npx --yes skills@1.5.23 add . --list
+
+      - name: Check plugin manifests
+        run: |
+          npm install --global @anthropic-ai/claude-code@2.1.250
+          claude plugin validate . --strict

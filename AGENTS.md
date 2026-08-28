@@ -124,11 +124,26 @@ suite of only positive cases rewards an over-eager skill, and over-eagerness is 
 usual way a skill goes wrong.
 
 ```bash
+python3 scripts/validate-package.py        # structure, frontmatter, prose, evals
 claude plugin validate . --strict          # manifests
-npx skills add . --list                    # discovery and frontmatter
-bash -n <plugin>/hooks/*.sh                # hook syntax
+npx skills add . --list                    # discovery
 claude plugin eval ./<plugin> --scaffold   # cases, when enabled for your account
 ```
+
+The first three run in CI on every pull request, along with a shell syntax check
+and a step that executes every `scaffold.sh` and fails any that produces an empty
+diff. `validate-package.py` needs no dependencies and no network.
+
+What it enforces, so you do not have to remember it: frontmatter limits and the
+name matching its directory, the 500-line skill body, references linked from
+`SKILL.md` and existing, a `## Contents` heading on references over 100 lines, no
+em or en dashes outside code fences, at least three eval cases each with a prompt,
+graders carrying `## Passes` and `## Fails`, an executable `scaffold.sh`, and
+manifest fields that Claude Code would otherwise ignore in silence.
+
+Pinning in CI is deliberate. Actions are pinned to commit SHAs because tags can be
+retargeted, and the npm tools to exact versions so a new release cannot change the
+result of an unchanged commit. Bump them in their own commit.
 
 `--scaffold` runs author-supplied bash as you, so read the scaffolds first. The
 runner adds a no-plugin baseline arm: if a case scores the same without the plugin,

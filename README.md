@@ -121,12 +121,16 @@ where they belong to the plugin rather than to the skill.
 
 [AGENTS.md](AGENTS.md) has the rules for adding a skill: frontmatter limits, how to
 write a description that actually gets matched, when to split content into
-`references/`, and the bar for hooks. Validate before opening a PR:
+`references/`, and the bar for hooks and evals. Validate before opening a PR:
 
 ```bash
+python3 scripts/validate-package.py
 claude plugin validate . --strict
 npx skills add . --list
 ```
+
+CI runs all three on every pull request, plus a shell syntax check and a step that
+executes every eval scaffold.
 
 ## License
 

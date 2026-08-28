@@ -3,6 +3,11 @@
 Every entry is **Slop** (delete or rewrite) versus **Not slop** (leave it). When a case
 falls between the two, the tiebreaker is always the surrounding file: match it.
 
+**No entry below reaches into content that is data rather than code**: string literals,
+test fixtures, snapshots, expected-output files, and docs quoting bad code as an
+example. A fixture full of restating comments is a fixture, and entry 1 does not apply
+to it. This holds for every entry, not just the ones where it is obvious.
+
 ## Contents
 
 1. Comment slop: restating code, narrating the edit, section banners, invented TODOs
