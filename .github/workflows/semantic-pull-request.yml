@@ -1,0 +1,24 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+
+"name": "Semantic Pull Request"
+
+"on": # yamllint disable-line rule:truthy
+    "pull_request_target":
+        "types":
+            - "opened"
+            - "reopened"
+            - "edited"
+            - "synchronize"
+    "merge_group": # yamllint disable-line rule:empty-values
+
+"permissions": {}
+
+"jobs":
+    "semantic-pull-request":
+        "permissions":
+            "contents": "read"
+            "pull-requests": "write" # to analyze PRs (amannn/action-semantic-pull-request)
+            "statuses": "write" # to mark status of analyzed PR (amannn/action-semantic-pull-request)
+        "uses": "anolilab/workflows/.github/workflows/semantic-pull-request.yml@9037c2643e28b71d6f625f73686676a9c39761c2" # v23.0.2
+        "with":
+            "target-repo": "anolilab/skills"
