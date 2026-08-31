@@ -3,6 +3,18 @@
 Every entry is **Slop** (delete or rewrite) versus **Not slop** (leave it). When a case
 falls between the two, the tiebreaker is always the surrounding file: match it.
 
+The examples are illustrative, not a scope limit. Entries 1 through 9 describe shapes
+that occur in any language, and each one is shown in whichever language spells that
+shape most plainly. Read entry 10 for the tells specific to the language in front of
+you, and read it knowing that a few of them *invert* an entry above rather than adding
+to it: Go's repeated `if err != nil` is idiom, not defensive slop.
+
+Most entries here are **style calls**, and a style call needs corroboration before you
+act on it: one guard or one comment on its own is as likely to be the file's habit as
+the agent's. A few entries are instead marked **a defect rather than a style call**.
+Those are things nobody chose, so no local convention can make them correct and a
+single sighting is enough.
+
 **No entry below reaches into content that is data rather than code**: string literals,
 test fixtures, snapshots, expected-output files, and docs quoting bad code as an
 example. A fixture full of restating comments is a fixture, and entry 1 does not apply
@@ -132,12 +144,23 @@ a schema at the edge, the handler does not re-check the fields.
 
 **`hasOwnProperty` / `in` checks** on an object literal the same function just built.
 
-**Empty catch with an apologetic comment.**
+**Empty catch with an apologetic comment.** The same sin wears a different keyword in
+each language.
 
 ```js
 } catch (e) {
   // Ignore errors
 }
+```
+
+```py
+except Exception:
+    pass                             # or: logger.debug("oh well")
+```
+
+```go
+result, err := compute()
+_ = err                              // discarding an error the caller could act on
 ```
 
 ### Not slop
@@ -148,6 +171,13 @@ a schema at the edge, the handler does not re-check the fields.
 - Guards required by the type system to narrow. Those are not defensive, they are proof.
 - Defensive style that the surrounding module uses consistently. Match it.
 - Assertions and invariant checks that crash loudly. Those are the opposite of slop.
+- **The language's own error idiom, however repetitive it looks.** Go's
+  `if err != nil { return err }` after every call, Rust's `?` on every fallible
+  expression, and a Python `raise ... from err` chain are how those languages spell
+  control flow. Stripping them because entry 2 pattern-matches is the worst mistake
+  this catalog can cause. What *is* slop in Go is the check that cannot fire, such as
+  a second `err != nil` on a value already returned, or a nil check on a slice that
+  ranges safely when nil.
 
 ---
 
@@ -223,6 +253,32 @@ const handlers: Record<string, Handler> = { start: startHandler };
 // prefer inference, or `satisfies Record<string, Handler>`
 ```
 
+The examples above are TypeScript because that is where the syntax is richest, but the
+move is the same everywhere: claim a type nobody checked. The equivalents:
+
+```py
+def handle(payload: Any) -> Any:     # `Any` as the escape hatch
+    user = cast(User, payload)       # `cast` asserts, it does not verify
+    return user.name                 # type: ignore[attr-defined]
+```
+
+```go
+func Save(value interface{}) error   // an untyped parameter in a typed codebase
+
+name := payload.(string)             // panics on the wrong type; the comma-ok
+                                     // form `name, ok := payload.(string)` is
+                                     // the one that actually checks
+```
+
+```rust
+let user: User = serde_json::from_str(body).unwrap();  // `.unwrap()` in library
+                                                       // code that returns Result
+```
+
+Python's `cast` and Go's single-value type assertion are exact analogues of `as any`:
+each tells the checker a fact the program never established. Rust's `.unwrap()` is the
+same claim spelled as a panic.
+
 ### Not slop
 
 - A cast with a specific `SAFETY:` comment naming the invariant that was checked.
@@ -294,9 +350,9 @@ the helper sits directly above its only caller.
 
 **Wrappers that add nothing.**
 
-```ts
-function getUserName(user: User): string {
-  return user.name;
+```go
+func getUserName(u User) string {
+	return u.Name
 }
 ```
 
@@ -310,8 +366,9 @@ one case that exists.
 **`Shape`, `Data`, `Info`, `Manager`, `Helper`, `Util`, `Handler` suffixes** where the
 domain has a real word. `UserShape` is `User`.
 
-**Barrel `index.ts` re-exports** created for a two-file directory in a repo that imports
-by path.
+**Re-export shims** created for a two-file directory in a repo that imports by path: a
+barrel `index.ts`, an `__init__.py` that only forwards names, a `mod.rs` of bare `pub
+use` lines.
 
 **Constants files** holding one string used once.
 
@@ -369,8 +426,16 @@ loads.
 vi.mock("./user-store");
 ```
 
+```py
+@patch("app.services.user_store")    # patching the collaborator under test
+@patch("app.services.clock")         # patching a seam the code could have taken
+```
+
 Prefer a real in-memory implementation or dependency injection. A test whose subject is
-entirely mocked asserts only that the mock was configured.
+entirely mocked asserts only that the mock was configured. Go and Rust arrive at this
+one differently: neither has module patching, so the tell there is an interface or
+trait invented solely so a test can implement it, which is entry 5 wearing a test's
+clothes.
 
 **Asserting on the mock**: `expect(mockFn).toHaveBeenCalledWith(...)` as the *only*
 assertion, with no check on the observable result.

@@ -2,9 +2,11 @@
 name: deslop
 description: >
   Removes AI-generated slop from a branch's changes: narrating comments, needless
-  defensive code, `any`/`unknown` casts, single-use wrappers, mock-heavy tests,
-  anything foreign to the file's own style. Use proactively once a batch of code
-  edits is finished and before review or commit, and whenever the user says deslop,
+  defensive code, `any` and other casts that silence the type checker, single-use
+  wrappers, mock-heavy tests, anything foreign to the file's own style. Works in any
+  language, with per-language tells for TypeScript, Python, Go, Rust, Shell, and SQL.
+  Use proactively once a batch of code edits is finished and before review or commit,
+  and whenever the user says deslop,
   desloppify, or anti-slop. Not for bug hunting, security review, or refactoring;
   behaviour stays identical.
 ---
@@ -37,13 +39,25 @@ at its neighbours, look at how the same problem is solved three directories over
 codebase already has a comment density, an error-handling posture, a naming scheme, a
 test style. Slop is whatever deviates from them.
 
-Two corollaries that decide most calls:
+The corollaries that decide most calls:
 
 - **Consistency beats correctness-in-the-abstract.** A guard clause that is textbook
   defensive programming is still slop if every sibling function trusts its caller.
   Conversely, do not strip a `try`/`catch` from a module where everything else has one.
 - **Evidence beats hedging.** Code that pre-emptively handles a case that cannot occur
   on any real path is the agent papering over its own uncertainty. Delete it.
+- **One tell is a question, several together are a finding.** A lone guard, a lone
+  comment, a lone cast is the call you will most often get wrong, because any one of
+  them can be this file's own habit. Look for corroboration before cutting: a function
+  carrying a narrating comment *and* a guard for an impossible case *and* a cast that
+  hides the type has three independent witnesses against it. This threshold governs
+  the style calls, catalog entries 1 through 7. It does not govern what the catalog
+  marks as a defect rather than a style call, where nobody chose the thing and one
+  sighting is enough.
+- **A clean diff comes back unchanged.** Finding nothing is a normal outcome on a
+  careful author's branch, not a failed pass. Say so in a sentence and stop. Editing
+  to show effort is the mistake this skill is most likely to make, because it runs
+  against every branch whether or not there is work to do.
 
 ## Procedure
 
@@ -70,7 +84,8 @@ and stop if the diff is empty.
 Before touching anything, read what the repo already tells you:
 
 - `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, and any style docs.
-- The lint and formatter config: `eslint`/`oxlint`/`biome`/`ruff`/`golangci-lint`.
+- The lint and formatter config: `eslint`/`oxlint`/`biome`, `ruff`/`mypy`,
+  `golangci-lint`/`go vet`, `clippy`/`rustfmt`, `shellcheck`, whatever this repo has.
   A rule that is already configured is not your call to relitigate; a pattern the
   linter cannot see is exactly where slop hides.
 - For each changed file, the **untouched** parts of that file and one or two of its
@@ -102,6 +117,18 @@ Apply fixes as you go, smallest edit that removes the smell. Do not batch a rewr
 For a diff over ~20 files, process in batches grouped by directory so that each batch
 shares a convention sample.
 
+Read the following before you edit, because it bans outputs rather than inputs. A
+deslop pass clears the agent's tells and then leaves its own, and these are the ones
+it leaves. Never introduce any of them into code that did not already have it:
+
+- **A single silhouette for every function you touch.** Matching the file means
+  matching its variety, and a run of functions filed down to one shape is a fresh tell.
+- **Early returns in a file that nests on purpose.** The pattern is only right here if
+  the file already reaches for it.
+- **Inlining a helper the file's own style would have kept.** Used once is not the
+  same as unjustified; some codebases name every step.
+- **Terseness standing in for quality.** Short is not the target. Indistinguishable is.
+
 ### 4. Do the work properly
 
 Size is not a reason to skip. If removing a single-use abstraction means touching
@@ -122,12 +149,13 @@ The other exception is the user asking for behaviour changes too.
 
 ### 5. Verify
 
-Run whatever the repo actually runs, discovered from `package.json` scripts, `Makefile`,
-`justfile`, or CI config: typecheck, lint, and the tests covering the touched files, in
-that order. Never claim a clean pass you did not run; if the suite was already red before
-your edits, say that explicitly.
+Run whatever the repo actually runs, discovered from its own task runner rather than
+assumed: `package.json` scripts, `pyproject.toml`/`tox.ini`, `go.mod`, `Cargo.toml`,
+`Makefile`, `justfile`, or CI config. Typecheck, lint, and the tests covering the
+touched files, in that order. Never claim a clean pass you did not run; if the suite
+was already red before your edits, say that explicitly.
 
-Then read your own diff (`git diff`) against these four questions. Each one catches a
+Then read your own diff (`git diff`) against these five questions. Each one catches a
 failure the removal rules above cannot see on their own.
 
 **Did a removal cost the code something real?** Removing what the catalog names is the
@@ -143,10 +171,20 @@ is a defect rather than a cleanup, so put it back and keep the rest of the remov
 fixtures, snapshots, expected-output files, and documentation *about* bad code are
 content. Editing them changes what a test asserts.
 
-**Did I introduce my own uniformity?** A deslop pass reliably clears the surface tells
-and then adds structural ones: every touched function flattened to the same shape,
-early returns applied where the file nests deliberately, four comments cut to zero
-where the file's own rate is two. Matching the file means matching its variety too.
+**Did I introduce my own uniformity?** Walk the finished diff against the output bans
+in step 3, and add the one they cannot state in advance: comment rate. Four comments
+cut to zero where the file's own rate is two is the same failure as filing every
+function to one shape, and only the finished diff shows it.
+
+**Did I stop at the cheap categories?** The questions above all look for damage, so
+this is the only one pointed the other way. Check coverage, not volume: list the
+catalog entries you actually considered for this diff. Comment slop is the easiest to
+see and the least valuable to remove, so a diff whose removals all come from entry 1
+is the shape a pass makes when it stopped there. It is also the shape of a diff that
+genuinely only had comment slop, which is why the check is the list and not the
+ratio. Single-use abstractions, both paths kept, and mocked
+seams are what survive a careless pass, and none of the tools you just ran can see any
+of them. Finding nothing in an entry is a fine answer. Never having looked is not.
 
 **Does the result still honour the guardrails below?** Walk the list. It is short, and
 the failures it names are the expensive ones.
