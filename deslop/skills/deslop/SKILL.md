@@ -90,6 +90,8 @@ Before touching anything, read what the repo already tells you:
   linter cannot see is exactly where slop hides.
 - For each changed file, the **untouched** parts of that file and one or two of its
   siblings. That is your reference sample, and skipping it is how these passes go wrong.
+- The keep-list, if it exists: `cat "$(git rev-parse --git-path deslop-keep)"`. It holds
+  lines the user has already ruled on. See [Keep-list](#keep-list).
 
 ### 3. Pass over each file
 
@@ -186,7 +188,7 @@ ratio. Single-use abstractions, both paths kept, and mocked
 seams are what survive a careless pass, and none of the tools you just ran can see any
 of them. Finding nothing in an entry is a fine answer. Never having looked is not.
 
-**Does the result still honour the guardrails below?** Walk the list. It is short, and
+**Does the result still honour the guardrails below, including the keep-list?** Walk the list. It is short, and
 the failures it names are the expensive ones.
 
 ### 6. Report
@@ -220,7 +222,37 @@ Never remove, on the grounds that it "looks like AI":
   example. A narrating comment inside a fixture is the fixture. Editing it changes
   what the test asserts, and the test is what tells you the pass was safe.
 - Anything that records a constraint the code cannot express: an ordering
-  requirement, a compatibility note, a reason a slower path was chosen.
+  requirement, a compatibility note, a reason a slower path was chosen. A
+  `do not remove` note protects only when it says what depends on the line, such as
+  `do not remove: the importer reads columns by position`. A bare instruction with no
+  reason gets no protection.
+- A `shortcut: <limit>, <when to upgrade>` note. It records a deliberate shortcut
+  and the trigger to revisit it. Debt tooling reads these markers, so keep the
+  marker and both halves exactly as written, even when the wording is terse.
+
+- Any line in the keep-list. The user restored it or asked for it, so the question is
+  settled.
 
 And never, in this pass: rename things for taste, reorganise files, upgrade
 dependencies, or "improve" untouched code outside the diff.
+
+## Keep-list
+
+A pass can run again after the user has reverted one of its cuts. Without a record, the
+same line gets cut again. The keep-list is that record. It is a local file in the clone's
+git directory, so it is not committed and is not shared between clones.
+
+Location: `git rev-parse --git-path deslop-keep`. It is created on first use.
+
+Record a line when the user restores something this skill removed, or tells you to keep
+a specific line. Append one entry per line, as the file path, a tab, and the exact line
+text with its leading whitespace trimmed:
+
+```bash
+printf '%s\t%s\n' "src/cart.ts" "// The carrier rounds up to the next 50c" >> "$(git rev-parse --git-path deslop-keep)"
+```
+
+Compare the same way the entry was written: exact text, trimmed. A line that is reworded is no longer covered, and it is up to you
+whether it is still slop. Never remove a recorded line. Its neighbours are still subject
+to the usual rules. Do not record lines on your own initiative: only the user's decision
+belongs in the file.
