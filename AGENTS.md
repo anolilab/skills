@@ -3,6 +3,8 @@
 This repo publishes agent skills. It is consumed by other people's agents, so a skill
 landing here is a shipped artifact, not a scratch note.
 
+<important if="you are adding a plugin, moving files, or changing the repo layout">
+
 ## Layout
 
 One directory per plugin at the repo root, each self-contained. A plugin owns its
@@ -38,6 +40,14 @@ plugin does not, because `plugin.json` points at the whole `skills/` directory.
 
 Group skills into one plugin when they share hooks or are always wanted together.
 Split them when someone would reasonably want one and not the other.
+
+Do not put a skill under `.claude/skills/` or `.agents/skills/` in this repo. The
+`npx skills` installer discovers those directories, so the skill would be published
+to everyone who installs from the repo. Keep repo-only helpers outside those paths.
+
+</important>
+
+<important if="you are writing or editing a SKILL.md or a skill's references">
 
 ## Adding a skill
 
@@ -93,6 +103,10 @@ headers, no em dashes, no rule-of-three padding, no summary section restating th
 document. The `deslop` skill's own catalog is the reference for what to avoid, and it
 applies to skills in this repo as much as to the code they review.
 
+</important>
+
+<important if="you are adding or changing a hook, hooks.json, or a hook script">
+
 ## Hooks
 
 Hooks in `hooks/hooks.json` are active for everyone who installs the plugin, so they
@@ -108,6 +122,14 @@ need a higher bar than a skill does:
 - **Do nothing when there is nothing to do.** Check real state first, such as whether
   the branch actually has changes.
 - Mark scripts executable (`chmod +x`) and commit the bit.
+
+`scripts/test-auto-deslop.sh` checks the deslop hook's opt-out, loop guard, dedupe, and
+fail-open behaviour against throwaway repos. CI runs it. Add a case there when a hook
+gains behaviour.
+
+</important>
+
+<important if="you are adding or changing an eval case, a scaffold, or a grader">
 
 ## Evals
 
@@ -130,9 +152,9 @@ npx skills add . --list                    # discovery
 claude plugin eval ./<plugin> --scaffold   # cases, when enabled for your account
 ```
 
-The first three run in CI on every pull request, along with a shell syntax check
-and a step that executes every `scaffold.sh` and fails any that produces an empty
-diff. `validate-package.py` needs no dependencies and no network.
+The first three run in CI on every pull request, along with a shell syntax check,
+the hook tests, and a step that executes every `scaffold.sh` and fails any that
+produces an empty diff. `validate-package.py` needs no dependencies and no network.
 
 Three other workflows run alongside it, all calling the shared definitions in
 `anolilab/workflows`: a Conventional Commits check on the pull request title,
@@ -144,11 +166,8 @@ until Dependency graph is switched on in the repository settings. Add it back in
 the same commit that introduces the first `package.json` or `pyproject.toml`, and
 turn the setting on at the same time.
 
-**Pull request titles must follow Conventional Commits**, because the title is
-what the check reads: `feat(deslop): ...`, `fix: ...`, `ci: ...`, `docs: ...`.
-
-What it enforces, so you do not have to remember it: frontmatter limits and the
-name matching its directory, the 500-line skill body, references linked from
+What the validator enforces, so you do not have to remember it: frontmatter limits and
+the name matching its directory, the 500-line skill body, references linked from
 `SKILL.md` and existing, a `## Contents` heading on references over 100 lines, no
 em or en dashes outside code fences, at least three eval cases each with a prompt,
 graders carrying `## Passes` and `## Fails`, an executable `scaffold.sh`, and
@@ -167,6 +186,10 @@ roughly what an agent sees when deciding whether to fire the skill. Then test on
 real task, not by reading. The failure you are hunting is the skill not firing when
 it should, or firing when it should not.
 
+</important>
+
+<important if="you are writing a commit message, a PR title, or a PR description">
+
 ## Commit messages
 
 Describe the change on its own merits: the behaviour, the defect, the fix. Do not
@@ -174,3 +197,8 @@ name a product, package, vendor, or repository that an idea came from, and do no
 reference private notes or tickets that identify one. A project name belongs in a
 commit only when the code is *about* that project, such as an adapter or a migration
 guide for it.
+
+**Pull request titles must follow Conventional Commits**, because the title is what
+the check reads: `feat(deslop): ...`, `fix: ...`, `ci: ...`, `docs: ...`.
+
+</important>
