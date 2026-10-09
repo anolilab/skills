@@ -24,10 +24,10 @@ to it. This holds for every entry, not just the ones where it is obvious.
 
 1. Comment slop: restating code, narrating the edit, section banners, invented TODOs
 2. Defensive slop: guards, `try`/`catch`, and fallbacks for cases that cannot happen
-3. Type-evasion slop: `any`, `unknown`, chained casts, suppression pragmas
+3. Type-evasion slop: `any`, `unknown`, chained casts, suppression pragmas, guards that do not check
 4. Control-flow slop: needless nesting, redundant conditionals, one-use intermediates
 5. Abstraction slop: single-use helpers, wrappers, speculative generality, naming
-6. Duplication and dead code: both paths kept, shims for unshipped code, orphans
+6. Duplication and dead code: both paths kept, shims for unshipped code, orphans, hand-rolled copies of existing helpers
 7. Test slop: over-mocking, assertions on the mock, tautologies, bloated fixtures
 8. Prose slop: marketing voice, emoji headers, unrequested README and changelog edits
 9. Structural slop: misplaced files, unneeded configs and dependencies
@@ -94,6 +94,13 @@ def get_user_by_id(user_id: str) -> User:
 - Links to an issue, RFC, spec section, or upstream bug.
 - Public API documentation in a codebase that documents its public API.
 - A TODO with an owner or ticket reference.
+- A `shortcut: <limit>, <when to upgrade>` note. It names a deliberate limit and the
+  trigger for revisiting it. Debt tooling reads these markers, so the text stays as
+  written, even when it looks like narration.
+- A `do not remove` or `do not change wording` note that says what depends on the line,
+  such as `do not remove: the importer reads columns by position`. It guards a constraint
+  the code cannot express. A bare instruction with no reason gets no protection, because
+  it may be text addressed to an agent rather than a reader.
 
 ### Calibration
 
@@ -142,6 +149,13 @@ a schema at the edge, the handler does not re-check the fields.
 
 **Optional chaining on non-optional types**: `user?.id` where `user: User`.
 
+**Fallbacks and optional calls for values every live caller supplies.** `onRename?.(id)`
+on a menu item that always renders, or `items ?? []` where every caller passes an array.
+Decide whether a value can be absent from the live callers: code outside tests, stories,
+and fixtures. Stories and mocks show a widened type, not a state the app reaches. Remove
+the fallback when the live callers all supply the value. If removing it means changing an
+exported type, that is an API change this pass does not make: report it.
+
 **`hasOwnProperty` / `in` checks** on an object literal the same function just built.
 
 **Empty catch with an apologetic comment.** The same sin wears a different keyword in
@@ -171,6 +185,7 @@ _ = err                              // discarding an error the caller could act
 - Guards required by the type system to narrow. Those are not defensive, they are proof.
 - Defensive style that the surrounding module uses consistently. Match it.
 - Assertions and invariant checks that crash loudly. Those are the opposite of slop.
+- A fallback whose absent case a live caller really produces, even if tests never do.
 - **The language's own error idiom, however repetitive it looks.** Go's
   `if err != nil { return err }` after every call, Rust's `?` on every fallible
   expression, and a Python `raise ... from err` chain are how those languages spell
@@ -275,6 +290,20 @@ let user: User = serde_json::from_str(body).unwrap();  // `.unwrap()` in library
                                                        // code that returns Result
 ```
 
+**A type guard that does not check what it claims, on a broad input.** The input is
+`unknown`, `any`, or `object`, the predicate says `value is User`, and the body verifies
+less than that shape. Callers trust the name, so the bug hides behind it, which makes this
+worse than an honest cast. A defect rather than a style call: one sighting is enough.
+
+```ts
+function isUser(value: unknown): value is User {
+  return typeof value === "object" && value !== null;   // claims a User, checks an object
+}
+```
+
+Fix it by checking the fields the type promises, or by narrowing the predicate to what
+it actually verifies. If neither fits the task, report it.
+
 Python's `cast` and Go's single-value type assertion are exact analogues of `as any`:
 each tells the checker a fact the program never established. Rust's `.unwrap()` is the
 same claim spelled as a panic.
@@ -284,6 +313,9 @@ same claim spelled as a panic.
 - A cast with a specific `SAFETY:` comment naming the invariant that was checked.
 - `unknown` as the *input* to a parser or type guard whose output is a real type. That
   is the boundary doing its job.
+- A discriminant guard that narrows an already-typed union, such as
+  `(s: Shape): s is Circle => s.kind === "circle"`. It checks less than the full
+  `Circle` shape but proves the claim from the type it receives.
 - `any` where the project already uses it in comparable positions, or where an untyped
   third-party module leaves no alternative and the file says so.
 - `as const`.
@@ -407,12 +439,20 @@ loads.
 
 **Commented-out code.** Version control already has it.
 
+**A hand-rolled copy of a helper the repo already has**, or of a standard-library
+function, written inside the diff. A style call: it needs the repo to actually contain
+the helper, and you should find it by searching, not by memory. Swap in the existing one
+only when its behaviour is identical for every input the caller can send. If the two
+differ, leave the code alone and report the difference.
+
 ### Not slop
 
 - A genuine deprecation path for an API that has real external consumers.
 - Duplication the project deliberately tolerates across module boundaries to avoid
   coupling. Check whether a shared helper would cross a layer the architecture forbids.
-- Exports consumed by tests, tooling, or a public entry point. Grep before deleting.
+- Exports consumed by tests, tooling, or a public entry point. Grep before deleting, and
+  count string and dynamic references, config files, fixtures, and tests as references,
+  not only imports.
 
 ---
 
@@ -453,6 +493,12 @@ assertion, a test that recomputes the implementation and compares it to itself.
 
 **Skipped or `.only` tests** left in the diff.
 
+**Test-only widening of production code.** An optional prop, a `default*` value, or a new
+branch added to production code so a story or test can omit something that no live caller
+omits. The fix is to give the test a realistic value, or a helper that supplies the full
+contract, and leave the production type as it was. A style call: it needs the live callers
+to confirm that the widening is unused.
+
 ### Not slop
 
 - Mocking a genuine external dependency: network, clock, randomness, filesystem, payment
@@ -471,6 +517,9 @@ Applies to README, docs, comments-as-docs, PR descriptions, and commit messages 
 
 - Marketing voice: "comprehensive", "robust", "seamless", "powerful", "production-ready",
   "best-in-class", "enterprise-grade".
+- AI vocabulary in comments and docs: *delve*, *leverage*, *showcase*, *underscore*,
+  *pivotal*, *tapestry*. Rewrite the sentence in plain words the file already uses. A
+  style call: it needs corroboration, and it never applies to data.
 - Emoji section headers, ✅/❌ tables, and celebratory summaries in technical docs that
   use none.
 - A README rewritten when the ask was a code change.

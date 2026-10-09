@@ -53,6 +53,9 @@
                   done < <(find . -name '*.sh' -not -path './.git/*' | sort)
                   echo "checked $found shell script(s)"
 
+            - "name": "Test the auto-deslop hook"
+              "run": "bash scripts/test-auto-deslop.sh"
+
             - "name": "Check eval scaffolds build a reviewable diff"
               "run": |
                   set -euo pipefail
