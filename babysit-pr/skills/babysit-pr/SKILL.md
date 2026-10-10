@@ -5,8 +5,8 @@ description: >
   newer than your last push, fixes the findings that are real, replies to and resolves
   the ones that are not, pushes, and repeats until checks pass and reviewers approve.
   Use when the user says babysit this PR, watch the PR, handle the review comments, or
-  get the PR green. Honours any stop point the user gives. Not for reviewing someone
-  else's PR, not for writing a PR from scratch, and never for merging or closing one.
+  get the PR green. Honours any stop point the user gives. Merges only when the user
+  asks for it. Not for reviewing someone else's PR, not for writing a PR from scratch.
 ---
 
 # Babysit PR
@@ -86,15 +86,21 @@ Never resolve a thread you did not answer. Never dismiss a review.
 
 ## Wait without polling hard
 
-After a push, wait for checks and reviewers. Use the agent's own wait or schedule
-primitive if it has one. Otherwise run `gh pr checks <number> --watch --interval 60`.
+If the harness has a pull request watcher, use it and end the turn. The watcher wakes
+you when checks finish or someone comments. Otherwise wait after a push with the agent's
+own wait or schedule primitive, or run `gh pr checks <number> --watch --interval 60`.
 Between rounds, back off from 1 minute toward 10 minutes. A tight loop burns requests
 and gains nothing, since bots take minutes to respond.
 
-For a check that failed for a reason the log shows is unrelated to the branch, such as
-a network timeout or a runner that went away, rerun only the failed jobs with
-`gh run rerun <run-id> --failed`. Retry at most twice. A failure that repeats after
-that is a real one, and you fix it.
+If nothing new has arrived since the last pass, stay quiet. Post nothing, change
+nothing, and keep waiting.
+
+Separate two kinds of failure before acting on either. A repository failure comes from
+the branch: a test that the change broke, a type error, a lint error. Fix it. An
+infrastructure flake comes from outside the branch: a network timeout, a runner that
+went away, a registry that did not respond. For a flake, the log shows the cause, so
+rerun only the failed jobs with `gh run rerun <run-id> --failed`. Retry at most twice.
+A failure that repeats after that is a real one, and you fix it.
 
 ## Stop conditions
 
@@ -103,6 +109,10 @@ Finish when all of these hold:
 - Every required check has concluded `SUCCESS`.
 - No unresolved thread remains that you have not answered.
 - `reviewDecision` is `APPROVED`, or it is empty and the repository requires no review.
+
+At the finish line, merge only if the user explicitly asked you to merge in this
+conversation. Otherwise report that the PR is ready and leave the merge to them. A
+request to babysit a PR is not a request to merge it.
 
 Stop before the finish line when:
 
@@ -116,7 +126,8 @@ Stop before the finish line when:
 
 ## Never
 
-- Merge, close, or delete the PR or its branch.
+- Merge unless the user explicitly asked for it, and never close or delete the PR or its
+  branch.
 - Disable, skip, or delete a test or check to make it green. If a check is wrong, say
   so and defer it.
 - Edit files outside the PR's diff to make a failure go away, unless `main` fails the

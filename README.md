@@ -7,7 +7,7 @@ Skills for Real Engineers. Straight from my .agents directory.
 | Skill | What it does |
 | --- | --- |
 | [`deslop`](skills/deslop/) | Strips AI-generated slop out of the changes on a branch: narrating comments, unasked-for defensive code, `any`/`unknown` casts, single-use wrappers, mock-heavy tests. Behaviour stays identical. |
-| [`babysit-pr`](babysit-pr/skills/babysit-pr/) | Takes an open PR you wrote through review and CI rounds: fixes the real findings, answers and resolves the rest, pushes, and stops at green and approved or at a stop point you set. Never merges or closes. |
+| [`babysit-pr`](babysit-pr/skills/babysit-pr/) | Takes an open PR you wrote through review and CI rounds: fixes the real findings, answers and resolves the rest, pushes, and stops at green and approved or at a stop point you set. Merges only when you ask. |
 
 ## Install
 
