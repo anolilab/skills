@@ -188,6 +188,50 @@ it should, or firing when it should not.
 
 </important>
 
+<important if="you are adding or changing a skill, plugin, hook, or eval case in this repo">
+
+## Authoring checklist
+
+Use this order. The rules themselves are in the sections above, so read the ones that
+match your change before you write.
+
+1. **Place the change.** A new skill goes in an existing plugin's `skills/` directory.
+   A new plugin needs a directory at the repo root, a `.claude-plugin/plugin.json`, and
+   an entry in `.claude-plugin/marketplace.json`. See Layout.
+2. **Write the skill.** Keep `SKILL.md` under 500 lines. Move long material into
+   `references/` and link it directly from `SKILL.md`. See Adding a skill.
+3. **Write at least three eval cases**, one of them negative. Each case needs a
+   one-line `prompt.md`, a `graders/criteria.md` with a title and `## Passes` and
+   `## Fails`, and an executable `scaffold.sh`. See Evals.
+4. **Test each scaffold in an empty temp directory, never the repo root.** Scaffolds run
+   `git init` and set git config, so running one in the repo rewrites your config.
+
+   ```bash
+   d="$(mktemp -d)" && (cd "$d" && bash <abs-path-to-scaffold>) && git -C "$d" diff --cached --stat main
+   ```
+
+   The diff must be non-empty. CI rejects a scaffold that produces an empty diff.
+5. **Changed a hook?** Run `bash scripts/test-auto-deslop.sh`, and add a case for any
+   new behaviour before you finish. See Hooks.
+6. **Run the checks** from the repo root:
+
+   ```bash
+   python3 scripts/validate-package.py
+   claude plugin validate . --strict
+   bash scripts/test-auto-deslop.sh   # only when a hook changed
+   ```
+
+   Run `npx skills add . --list` when Node is available, and read the description line
+   as an agent would see it. Check that it says when the skill should fire.
+7. **Leave the work uncommitted** unless the user asks for a commit. Commit messages
+   follow the rules below.
+
+Gotchas: the validator rejects em and en dashes outside code fences, so write the word
+instead. `claude plugin eval` may not be enabled on the account. If it isn't, report the
+cases as unrun rather than passed.
+
+</important>
+
 <important if="you are writing a commit message, a PR title, or a PR description">
 
 ## Commit messages
