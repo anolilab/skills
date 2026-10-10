@@ -13,6 +13,13 @@
       "description": "Removes AI-generated slop from a branch's changes without altering behaviour, optionally running itself when a turn ends.",
       "category": "developer-tools",
       "license": "MIT"
+    },
+    {
+      "name": "babysit-pr",
+      "source": "./babysit-pr",
+      "description": "Takes an open pull request through review and CI rounds: fixes the real findings, answers and resolves the rest, pushes, and stops at green and approved or at a stop point you set.",
+      "category": "developer-tools",
+      "license": "MIT"
     }
   ]
 }
