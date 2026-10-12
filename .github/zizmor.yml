@@ -11,4 +11,6 @@ rules:
         # workflow it calls checks out any code, so there is nothing for a fork
         # to take over. Keep it that way.
         ignore:
+            - "pr-size.yml"
+            - "pr-vouch.yml"
             - "semantic-pull-request.yml"
