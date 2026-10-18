@@ -37,4 +37,4 @@ git add -A
 
 # The user restored this comment earlier, so the keep-list records it.
 printf '%s\t%s\n' "src/cart.ts" "// Walk the items in order and add up the line totals" \
-  >>"$(git rev-parse --git-path deslop-keep)"
+  >>"$(git rev-parse --git-common-dir)/deslop-keep"

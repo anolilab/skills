@@ -1,6 +1,6 @@
 # deslop evals
 
-Ten cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
+Eleven cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 `scaffold.sh` that builds a throwaway git repo with a base commit and a dirty branch.
 
 | Case | What it checks |
@@ -14,9 +14,10 @@ Ten cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 | `corroboration` | Leaves a lone tell the file's own habit explains, cuts a function stacking three |
 | `go-error-idiom` | Leaves idiomatic `if err != nil` alone, cuts the check that cannot fire |
 | `shortcut-marker` | Removes two slop comments, keeps a `shortcut:` debt marker word for word |
+| `ponytail-marker` | Removes two slop comments, keeps a `ponytail:` debt marker word for word |
 | `keep-list` | Removes a restating comment, keeps the one the user already restored and recorded |
 
-Eight of the ten are positive cases in name only. What they actually measure is
+Nine of the eleven are positive cases in name only. What they actually measure is
 restraint:
 
 - `clean-diff` fails any pass that finds something to remove.
@@ -28,6 +29,8 @@ restraint:
   explains, and equally a pass that takes only the cheapest of three stacked tells.
 - `shortcut-marker` fails a pass that rewrites a `shortcut:` note into prose or drops it,
   because tooling reads those markers as a ledger.
+- `ponytail-marker` fails a pass that drops or rewords the marker. Both the
+  `shortcut:` and `ponytail:` spellings feed debt tooling.
 - `keep-list` fails a pass that cuts a line the keep-list records, which is the failure the
   keep-list exists to prevent.
 - `go-error-idiom` fails a pass that reads Go through TypeScript eyes and strips the
