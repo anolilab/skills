@@ -1,12 +1,13 @@
 ---
 name: babysit-pr
 description: >
-  Babysits a pull request you opened: reads the review threads and CI results that are
-  newer than your last push, fixes the findings that are real, replies to and resolves
-  the ones that are not, pushes, and repeats until checks pass and reviewers approve.
-  Use when the user says babysit this PR, watch the PR, handle the review comments, or
-  get the PR green. Honours any stop point the user gives. Merges only when the user
-  asks for it. Not for reviewing someone else's PR, not for writing a PR from scratch.
+  Babysits a pull request you opened: reads the review findings and CI results that are
+  newer than your last push, fixes the real ones, replies to and resolves the rest,
+  pushes, and repeats until checks pass and reviewers approve. Use when the user says
+  babysit this PR, handle or fix the review comments, fix the pipes or CI, get the PR
+  green, rebase it, or to merge it once it is ready. Honours any stop point the user gives.
+  Merges only when the user asks for it. Not for reviewing someone else's PR, not for
+  writing a PR from scratch.
 ---
 
 # Babysit PR
@@ -29,15 +30,44 @@ alone and name it in your final message.
 Only act on feedback that arrived after the head commit was pushed. Feedback older than
 that was either addressed already or was written against code that has since changed.
 
-1. Get the head commit and its time: `headRefOid`, and the `committedDate` of the last
-   entry in `commits`. After each push you make, note the push time; from then on that
-   is the boundary.
-2. Collect unresolved review threads, PR-level reviews, and issue comments newer than
-   the boundary.
+1. Read the ledger first if one exists (see [Keep a ledger](#keep-a-ledger)). Then get
+   the head commit and its time: `headRefOid`, and the `committedDate` of the last entry
+   in `commits`. After each push you make, note the push time; from then on that is the
+   boundary.
+2. Collect unresolved review threads, PR-level review bodies, and bot summary comments
+   that are newer than the boundary. Page every list to its end. A thread count that is
+   exactly 100 means the list was cut short.
 3. An old thread still counts if the flagged code still has the problem at head. Check
    the code, not the timestamp alone.
 4. Collect failing check runs from `statusCheckRollup`. For each failure, read the
    failing step's log before deciding anything.
+
+## Findings that are not threads
+
+Review bots put findings where `reviewThreads` never shows them: a summary comment that
+the bot edits in place, and review bodies with sections such as "Outside diff range" or
+"Nitpick". These have no resolve button, so a thread count of zero says nothing about
+them. [references/gh.md](references/gh.md) lists the bots and how to read a summary.
+
+- Compare an edited summary by `updatedAt`, not `createdAt`. The id stays and the
+  findings change.
+- Merge every source into one list and drop duplicates. The same finding often arrives
+  as an inline thread, in the summary, and from a second bot.
+- A summary only counts once it reviewed the head commit. If it names an older commit,
+  or says the review is still running, the reviewer is not done and the PR is not
+  finished, however green the checks are.
+- Skip findings the bot itself marks resolved or outdated. The count in the summary
+  header is the number to reconcile against your list.
+
+Every finding on the list gets a disposition in the next section, whether or not a
+thread exists to reply on.
+
+## Skip the noise
+
+Status bots (deploy previews, performance and coverage reports, labelers) and a
+reviewer's "busy working" placeholder carry no finding. A wake-up that holds only
+those needs no tool calls and no analysis: answer in one line and end the turn. The
+event text already carries any check result that finished with it, so act on that.
 
 ## Decide each finding
 
@@ -57,6 +87,12 @@ about the detail.
 Offer one default for the harder call: when a finding is ambiguous and the fix would
 change behaviour, defer it rather than guess.
 
+Handle a round as a unit: decide every finding in it, make all the fixes, then push
+once. Each push restarts every review bot, so a push per comment multiplies the rounds
+and the wake-ups. From the third round on, bots keep surfacing fresh findings on fresh
+commits. Fix only bugs, security issues, and data loss at head, defer the rest, and
+say so.
+
 ## Make the change
 
 - Run the repository's own checks for the files you touched before pushing. Use the
@@ -73,6 +109,9 @@ default. If anyone else has pushed to this branch since your last push, merge
 `origin/main` instead, because a rebase would rewrite their commits. Push a rebased
 branch with `git push --force-with-lease`, never `--force`.
 
+When the PR is stacked on another PR and the base merges, retarget this one to the new
+base and `git rebase --onto` it, so the merged commits do not replay.
+
 ## Reply, then resolve
 
 For every thread you acted on, reply before resolving:
@@ -82,7 +121,18 @@ For every thread you acted on, reply before resolving:
   resolved.
 - A deferred thread gets a reply saying it needs a decision, and stays open.
 
+A finding that has no thread gets its disposition in the ledger and in the final
+message. Do not post a comment to a bot summary.
+
 Never resolve a thread you did not answer. Never dismiss a review.
+
+## Keep a ledger
+
+Context compaction and server restarts end a babysit mid-round, and the work may resume
+in another checkout of the same clone. Keep the state in
+`$(git rev-parse --git-common-dir)/babysit/ledger-<pr>.md`: the head SHA, the last push time,
+the round number, and one line per finding with its disposition and commit. Read it
+before anything else on resume, and update it after each push.
 
 ## Wait without polling hard
 
@@ -91,6 +141,9 @@ you when checks finish or someone comments. Otherwise wait after a push with the
 own wait or schedule primitive, or run `gh pr checks <number> --watch --interval 60`.
 Between rounds, back off from 1 minute toward 10 minutes. A tight loop burns requests
 and gains nothing, since bots take minutes to respond.
+
+With several PRs, run one round per PR and start no more fix agents than the harness
+allows. Queue the rest instead of starting an agent that cannot run.
 
 If nothing new has arrived since the last pass, stay quiet. Post nothing, change
 nothing, and keep waiting.
@@ -106,13 +159,20 @@ A failure that repeats after that is a real one, and you fix it.
 
 Finish when all of these hold:
 
-- Every required check has concluded `SUCCESS`.
-- No unresolved thread remains that you have not answered.
+- Every required check has concluded `SUCCESS`. Check this with `gh pr checks --required`.
+  Report a failing check that is not required, and leave it alone. A check the user has
+  said to ignore in this conversation is ignored.
+- The ledger has no open finding, and every review bot has reviewed the head commit.
 - `reviewDecision` is `APPROVED`, or it is empty and the repository requires no review.
+  When the ruleset requires an approving review that the author cannot give, the finish
+  line is the first two conditions, and the report says a reviewer or an admin merge is
+  still needed.
 
 At the finish line, merge only if the user explicitly asked you to merge in this
-conversation. Otherwise report that the PR is ready and leave the merge to them. A
-request to babysit a PR is not a request to merge it.
+conversation. A request to babysit a PR is not a request to merge it. Before the merge,
+run the preflight in [references/gh.md](references/gh.md) against the exact head commit
+you are merging: an earlier pass does not count, because a bot can post between the
+last check and the merge. An admin merge needs the user's explicit word for that too.
 
 Stop before the finish line when:
 
@@ -139,8 +199,9 @@ Stop before the finish line when:
 Report, briefly:
 
 - rounds completed, and the commits pushed
-- each thread as fixed, declined with reason, or deferred, with its link
+- each finding as fixed, declined with reason, or deferred, with its link
 - the current state of checks and approval
 - what is left and who needs to act on it
 
-Stop there. Do not restate the diff.
+Number every deferred item, so the user can answer "1 yes, 2 no". Stop there. Do not
+restate the diff.
