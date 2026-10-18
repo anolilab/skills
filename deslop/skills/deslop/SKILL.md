@@ -63,20 +63,27 @@ The corollaries that decide most calls:
 
 ### 1. Establish the review scope
 
+The base is the branch the work will merge into. For a branch with an open PR that is
+the PR's base, which differs from the default branch on a stacked PR or a repo that
+integrates on `alpha` or `next`. Diffing against the default branch there pulls the
+parent's code into scope.
+
 ```bash
-git symbolic-ref --quiet --short refs/remotes/origin/HEAD   # e.g. origin/main
-git diff --merge-base origin/main --stat
-git diff --merge-base origin/main
+base=$(gh pr view --json baseRefName --jq .baseRefName 2>/dev/null)
+[ -n "$base" ] || base=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD | sed 's|^origin/||')
+[ -n "$base" ] || base=main
+ref=origin/$base; git rev-parse -q --verify "$ref" >/dev/null || ref=$base
+git diff --merge-base "$ref" --stat
+git diff --merge-base "$ref"
 ```
 
 `--merge-base` covers committed *and* uncommitted work on the branch, which is what
-you want. Substitute the real integration branch if the repo uses something other
-than `main`/`master`.
+you want.
 
-If HEAD *is* the integration branch, fall back to the uncommitted work only:
+If HEAD *is* the base branch, fall back to the uncommitted work only:
 `git status --short` and `git diff HEAD`.
 
-Confirm the scope in one line before editing ("42 files changed against `origin/main`")
+Confirm the scope in one line before editing ("42 files changed against `origin/alpha`")
 and stop if the diff is empty.
 
 ### 2. Learn the local conventions
@@ -90,7 +97,7 @@ Before touching anything, read what the repo already tells you:
   linter cannot see is exactly where slop hides.
 - For each changed file, the **untouched** parts of that file and one or two of its
   siblings. That is your reference sample, and skipping it is how these passes go wrong.
-- The keep-list, if it exists: `cat "$(git rev-parse --git-path deslop-keep)"`. It holds
+- The keep-list, if it exists: `cat "$(git rev-parse --git-common-dir)/deslop-keep"`. It holds
   lines the user has already ruled on. See [Keep-list](#keep-list).
 
 ### 3. Pass over each file
@@ -226,9 +233,10 @@ Never remove, on the grounds that it "looks like AI":
   `do not remove` note protects only when it says what depends on the line, such as
   `do not remove: the importer reads columns by position`. A bare instruction with no
   reason gets no protection.
-- A `shortcut: <limit>, <when to upgrade>` note. It records a deliberate shortcut
-  and the trigger to revisit it. Debt tooling reads these markers, so keep the
-  marker and both halves exactly as written, even when the wording is terse.
+- A `shortcut: <limit>, <when to upgrade>` or `ponytail: <limit>, <when to upgrade>`
+  note. It records a deliberate shortcut and the trigger to revisit it. Debt tooling
+  greps for these markers, so keep the marker and both halves exactly as written, even
+  when the wording is terse.
 
 - Any line in the keep-list. The user restored it or asked for it, so the question is
   settled.
@@ -240,16 +248,17 @@ dependencies, or "improve" untouched code outside the diff.
 
 A pass can run again after the user has reverted one of its cuts. Without a record, the
 same line gets cut again. The keep-list is that record. It is a local file in the clone's
-git directory, so it is not committed and is not shared between clones.
+git directory, so it is not committed and is not shared between clones. It sits in the
+common git directory, so every worktree of one clone reads the same list.
 
-Location: `git rev-parse --git-path deslop-keep`. It is created on first use.
+Location: `$(git rev-parse --git-common-dir)/deslop-keep`. It is created on first use.
 
 Record a line when the user restores something this skill removed, or tells you to keep
 a specific line. Append one entry per line, as the file path, a tab, and the exact line
 text with its leading whitespace trimmed:
 
 ```bash
-printf '%s\t%s\n' "src/cart.ts" "// The carrier rounds up to the next 50c" >> "$(git rev-parse --git-path deslop-keep)"
+printf '%s\t%s\n' "src/cart.ts" "// The carrier rounds up to the next 50c" >> "$(git rev-parse --git-common-dir)/deslop-keep"
 ```
 
 Compare the same way the entry was written: exact text, trimmed. A line that is reworded is no longer covered, and it is up to you
