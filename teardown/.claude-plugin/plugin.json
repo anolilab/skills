@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "teardown",
+  "displayName": "Teardown",
+  "description": "Compares another project against yours and returns a ranked, evidence-backed list of what it has that you lack, checked against your own code first. Builds nothing until you pick items.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Anolilab",
+    "url": "https://github.com/anolilab"
+  },
+  "homepage": "https://github.com/anolilab/skills/tree/main/teardown",
+  "repository": "https://github.com/anolilab/skills",
+  "license": "MIT",
+  "keywords": ["teardown", "competitive-analysis", "roadmap", "feature-gap"],
+  "skills": "./skills/"
+}
