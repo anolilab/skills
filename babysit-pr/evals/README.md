@@ -1,6 +1,6 @@
 # babysit-pr evals
 
-Ten cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
+Thirteen cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 `scaffold.sh` that builds a throwaway git repo with a base commit, a feature branch,
 and a PR snapshot under `.git/babysit/`.
 
@@ -20,11 +20,14 @@ Each prompt tells the agent to write the replies and resolves it would have post
 | `comment-decline-reply` | `leaving-pr-comments`: a decline reply opens with the agent callout, cites the guarding line, and stays short |
 | `comment-redacts-local-details` | `leaving-pr-comments`: a comment quoting a local CI log drops the token, home path, and worktree name, and keeps the cause |
 | `comment-not-for-pr-body` | `leaving-pr-comments`: a PR description and a commit message get no callout. Negative case |
+| `pr-state-ready-no-merge` | `pr-state`: reports a ready PR as ready when asked whether it can merge, and does not merge. Negative case |
+| `pr-state-reviewer-stale` | `pr-state`: a green, approved PR whose review bot has not read the head is blocked |
+| `pr-state-thread-paging` | `pr-state`: finds the one unresolved thread on the second page of 101 |
 | `green-and-approved` | Changes nothing on a PR that is already green, approved, and has nothing new |
 
 For `babysit-pr`, only `green-and-approved` and `reviewer-pending` are negative cases in
 the strict sense, because they are the two where the right output is no change. For
-`leaving-pr-comments`, `comment-not-for-pr-body` is. The other three are positive in name only. What
+`leaving-pr-comments`, `comment-not-for-pr-body` is, and for `pr-state`, `pr-state-ready-no-merge`. The other three are positive in name only. What
 they mostly measure is restraint:
 
 - `stale-and-new-threads` fails a pass that replies to the old thread just because it is

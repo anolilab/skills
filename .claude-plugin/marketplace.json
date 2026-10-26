@@ -20,6 +20,13 @@
       "description": "Takes an open pull request through review and CI rounds: fixes the real findings, answers and resolves the rest, pushes, and stops at green and approved or at a stop point you set.",
       "category": "developer-tools",
       "license": "MIT"
+    },
+    {
+      "name": "teardown",
+      "source": "./teardown",
+      "description": "Compares another project against yours and returns a ranked, evidence-backed list of what it has that you lack. Builds nothing until you pick items.",
+      "category": "developer-tools",
+      "license": "MIT"
     }
   ]
 }
