@@ -63,7 +63,12 @@ The corollaries that decide most calls:
 
 ### 1. Establish the review scope
 
-The base is the branch the work will merge into. For a branch with an open PR that is
+If the message that invoked this skill names a file list or a range (the Stop hook
+lists the files in scope and gives the diff to review), that list is the scope. Review
+those files, and read their untouched neighbours for conventions. Do not widen the
+scope to the whole branch.
+
+Otherwise the base is the branch the work will merge into. For a branch with an open PR that is
 the PR's base, which differs from the default branch on a stacked PR or a repo that
 integrates on `alpha` or `next`. Diffing against the default branch there pulls the
 parent's code into scope.

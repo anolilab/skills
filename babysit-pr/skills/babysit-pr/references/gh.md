@@ -7,6 +7,7 @@
 - Review bodies and summary comments
 - Review bots and status bots
 - Checks
+- Rate limits
 - Merge preflight
 - Reply to a thread, resolve a thread, push, retarget
 
@@ -86,7 +87,8 @@ Reading a summary:
 
 | Kind | Logins | Treat as |
 | --- | --- | --- |
-| Review bots | `coderabbitai`, `qodo*`, `copilot-pull-request-reviewer`, `greptile*`, `sourcery-ai` | Findings. Read their summaries and inline threads. |
+| Advisory review bot | `coderabbitai` | Findings when they arrive. Never wait for its review. |
+| Review bots | `qodo*`, `copilot-pull-request-reviewer`, `greptile*`, `sourcery-ai` | Findings. Read their summaries and inline threads. |
 | Status bots | `netlify`, `vercel`, `codspeed*`, `codecov*`, `pkg-pr-new`, `github-actions`, `socket-security` | Noise unless the body reports a failure. |
 
 Match the login without the `[bot]` suffix. A bot that is not in the table and posts a
@@ -102,10 +104,27 @@ gh pr view <number> --json statusCheckRollup \
 gh run view <run-id> --log-failed           # the failing steps only
 ```
 
-Wait for checks to finish with `gh pr checks <number> --watch --interval 60`. Add
-`--fail-fast` to stop at the first failure.
+Prefer the harness's pull request watcher. Without one, run
+`gh pr checks <number> --watch --interval 60` once, in the background under the
+harness's monitor tool with a timeout, and read the result. Add `--fail-fast` to stop at
+the first failure. Do not wrap it in a loop.
 
 To rerun only the failed jobs of a run: `gh run rerun <run-id> --failed`.
+
+## Rate limits
+
+`gh pr view`, `gh pr checks`, and `gh pr create` use GraphQL. When that quota is spent
+the REST quota is separate and usually has room.
+
+```bash
+gh api rate_limit --jq '.resources | {graphql, core}'
+gh api repos/<owner>/<repo>/pulls/<number>                       # state, head, base, mergeable
+gh api repos/<owner>/<repo>/commits/<sha>/check-runs --jq '.check_runs[] | {name, status, conclusion}'
+gh api repos/<owner>/<repo>/pulls -f title=... -f head=... -f base=... -F body=@<file>   # open a PR
+```
+
+Review threads and their resolution state exist only in GraphQL, so reply and resolve
+after the reset.
 
 ## Merge preflight
 
@@ -116,6 +135,7 @@ asked for the merge:
 head=$(gh pr view <number> --json headRefOid --jq .headRefOid)
 gh pr checks <number> --required                      # all pass
 gh pr view <number> --json mergeStateStatus,reviewDecision,mergeable
+git fetch origin   # then: no base commit since the last green run touches this PR's files
 # threads: page to totalCount, none unresolved
 # summaries and review bodies: reviewed $head, no open finding
 ```

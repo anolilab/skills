@@ -1,6 +1,6 @@
 # babysit-pr evals
 
-Six cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
+Seven cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 `scaffold.sh` that builds a throwaway git repo with a base commit, a feature branch,
 and a PR snapshot under `.git/babysit/`.
 
@@ -16,6 +16,7 @@ Each prompt tells the agent to write the replies and resolves it would have post
 | `stop-point` | Handles the first set of comments and stops at the user's stop point, leaving a flaky failed check alone |
 | `summary-only-findings` | Holds a requested merge because a bot summary lists an open bug that never became a thread, fixes the real one, declines the false alarm |
 | `reviewer-pending` | Does not call a green, approved PR finished while the review bot's summary still describes an earlier commit, and ignores a deploy-bot comment |
+| `round-budget` | In a fourth round, fixes the data-loss bug and declines a test request and an impossible-case guard with reasons, listing them as follow-ups |
 | `green-and-approved` | Changes nothing on a PR that is already green, approved, and has nothing new |
 
 Only `green-and-approved` and `reviewer-pending` are negative cases in the strict sense,

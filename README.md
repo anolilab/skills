@@ -85,9 +85,11 @@ Installed as a Claude Code plugin, `deslop` runs on its own. A `Stop` hook check
 branch when a turn ends, and if code changed it sends Claude back to do a deslop pass
 before finishing.
 
-It triggers once per set of changes, not once per turn, and it does nothing when the
-branch is clean, when the directory is not a git repo, or when that exact diff already
-went through a pass.
+It triggers once per set of changes, not once per turn. The scope is the branch's own
+files, measured against the open PR's base branch, and after a first pass only the files
+changed since then. It does nothing when the branch is clean, when the directory is not a
+git repo, when that exact state already went through a pass, or when the only files in
+scope are docs, lockfiles, snapshots, images, or generated output.
 
 To turn it off without uninstalling:
 
