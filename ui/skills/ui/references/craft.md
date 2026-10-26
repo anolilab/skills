@@ -17,6 +17,9 @@
 
 ## Read the product first
 
+A `DESIGN.md` or design documentation that is current and covers this surface governs
+it; read it first. A draft or a migration plan describes intent, not the rules.
+
 Take values from the code, not from memory: the theme or token file (`theme.ts`,
 `tokens.css`, `tailwind.config.*`, a design-system package), the global stylesheet, and
 the sibling components. Lift exact values: colours, the spacing scale, font stacks,
@@ -53,6 +56,8 @@ system package), the library is the vocabulary:
   -0.02em); small text gets neither.
 - Form inputs on mobile web are at least 16px, or iOS Safari zooms in on focus.
 - Size text and spacing in `rem` on the web, so the layout follows the user's text size.
+- Headings wrap evenly with `text-wrap: balance`; paragraphs avoid orphans with
+  `text-wrap: pretty`.
 - Numbers that line up in tables and counters use tabular figures
   (`font-variant-numeric: tabular-nums`).
 - The system font is a sound default for product UI: it ships optical sizes and tuned
@@ -111,7 +116,19 @@ system package), the library is the vocabulary:
   colour, icon, or label. Honour `prefers-reduced-transparency` and
   `prefers-contrast: more` by making translucent surfaces solid with a visible border.
 - Prefer CSS transitions or the Web Animations API for fixed animations; main-thread
-  animation stutters while the page is busy. Use `@starting-style` for entry instead of
+  animation stutters while the page is busy. Work inside the animation library the
+  repo already uses; do not migrate or mix libraries.
+- Never read layout and write styles in the same frame. Measure once, then animate with
+  `transform` (the measure-then-invert approach) for anything that looks like a layout
+  change.
+- Scroll-linked motion uses scroll or view timelines (`animation-timeline: view()`), not
+  scroll event handlers. Pause looping animations off-screen with an
+  `IntersectionObserver`, and give every `requestAnimationFrame` loop a stop condition.
+- Blur stays small (8px or less), short, and off large surfaces; never animate
+  `backdrop-filter` across a whole screen. Set `will-change` only while an animation
+  runs.
+- View transitions are for navigation between pages, not for interactions that can be
+  interrupted. Use `@starting-style` for entry instead of
   a mount effect. Do not update a CSS variable on a parent every frame: it restyles every
   child.
 - Fix stutter or jumps before changing speed.
@@ -148,8 +165,17 @@ For drag, swipe, sheets, and sliders:
 - Hover styles only where hover exists: wrap them in
   `@media (hover: hover) and (pointer: fine)`, so they do not stick after a tap. Hover is
   never the only way to reach a function.
-- Icon-only buttons have an accessible name. Dialogs, sheets, and drawers have a title,
-  visually hidden if the design has none. Do not convey state by colour alone.
+- Prefer native elements (`button`, `a`, `input`) to roles on a `div`, and add ARIA only
+  where native semantics do not cover it. No `tabindex` above 0.
+- Icon-only buttons have an accessible name, and decorative icons are hidden from
+  assistive tech. Do not convey state by colour alone, including disabled states.
+- Dialogs, sheets, and drawers have a title (visually hidden if the design has none),
+  move focus inside on open, keep it there, close on Escape, and return focus to the
+  control that opened them.
+- Form errors are tied to their field (`aria-describedby`, `aria-invalid`), and urgent
+  ones are announced (`aria-live`). A disabled submit button says why. A toast is never
+  the only place important information appears.
+- Controls that expand or collapse expose `aria-expanded`.
 - A destructive action has a confirmation, an undo, or clearly different treatment.
 
 ## Responsive and native
