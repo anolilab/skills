@@ -3,6 +3,7 @@
 ## Contents
 
 - Web: browser-use
+- Interaction, accessibility, and motion
 - In T3 Code: iOS and Android
 - Outside T3 Code
 - Measuring
@@ -45,6 +46,35 @@ PY
 4. Clear the overrides, close the tab you opened, and stop the dev server.
 
 Screenshots are in device pixels; coordinates for clicks are CSS pixels.
+
+Add `("narrow", 320, 640, True)` to the sizes for any layout change. A 1280px window at
+200% browser zoom is a 640px CSS viewport: check that width too when text or layout
+moved.
+
+## Interaction, accessibility, and motion
+
+Screenshots prove layout, nothing else. For the rest, in the same browser-use tab:
+
+- **Keyboard:** press Tab through the changed flow
+  (`cdp("Input.dispatchKeyEvent", type="keyDown", key="Tab")` and `keyUp`), and after
+  each step read `js("document.activeElement.outerHTML.slice(0, 200)")` and take a
+  screenshot. Focus must be visible and never hidden under a sticky bar.
+- **Names and roles:** read `cdp("Accessibility.getFullAXTree")["nodes"]`, filtered to
+  the changed area, for missing names on buttons, a dialog without a title, and heading
+  order.
+- **Touch:** `cdp("Emulation.setTouchEmulationEnabled", enabled=True, maxTouchPoints=5)`
+  with the phone size, then tap, to confirm hover styles do not stick. Disable it after,
+  without `maxTouchPoints`.
+- **Motion:** slow every animation down with
+  `cdp("Animation.setPlaybackRate", playbackRate=0.2)` and take screenshots during the
+  transition. Look for two states overlapping, a wrong origin, or properties out of
+  step. Set the rate back to 1.
+- **Gestures:** perform the drag or swipe with pointer events, then swipe across the
+  control along the page's scroll axis and confirm the page scrolls and the control
+  does not.
+
+A simulator does not show real touch feel or device performance. Name that in the
+`untested` part of the final line when it matters.
 
 ## In T3 Code: iOS and Android
 

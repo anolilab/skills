@@ -37,8 +37,10 @@ Whatever the path, the change is not done until it has been seen rendered. See
    - *proof*: the render that will show the fix, and the measurement it will report.
 3. **Find the code that draws it.** Search for the component or class name and read the
    file. Do not guess where styles live.
-4. **Make the smallest change** that fixes the defect: spacing, size, layering, opacity,
-   type, or text fit, before any restructuring. Use the product's existing tokens.
+4. **Make the smallest change** that fixes the defect, in this order: delete what
+   causes it, reuse a value or variant the product already has, correct an existing
+   value, and only then add something new. When a change does not take effect, look for
+   two rules cancelling each other before adding a third.
 5. **Check every place the same code runs.** A fix to a shared component or token
    reaches all its uses; check them, not only the reported one.
 
@@ -54,9 +56,12 @@ wrong rather than one element, stop and treat it as [Build](#build).
 
 The existing app is the design. Before writing anything:
 
+- check the installed component library first: the skeleton, empty state, alert, or
+  form field you need probably exists;
 - find the nearest sibling (another dialog, sheet, toast, or list row) and reuse its
-  container, spacing, type, colour tokens, and motion;
+  container, spacing, type, colour tokens, motion, and wording;
 - copy its states: loading, empty, error, disabled, focused;
+- give a destructive action a confirmation or an undo;
 - a new visual style needs a stated reason why no existing component fits.
 
 ## Build
@@ -89,13 +94,15 @@ that touches type, colour, or motion.
 - No `transition: all`, and no animating `width`, `height`, `top`, or `left`; animate
   `transform` and `opacity`.
 - Anything triggered from the keyboard, or used hundreds of times a day, gets no
-  animation. Every action shows an immediate result: a selected, open, or loading state.
+  animation. Every action shows an immediate result: a pressed state on pointer-down,
+  then a selected, open, or loading state. Never show a change by motion alone.
 - While data is still on its way, show progress. The "nothing here" state is for a
   request that finished and returned nothing.
 - A slot that swaps content by state keeps one font size across states, so it does not
   jump.
 - Text fits by design: shorten the format or cap the content, never rely on an ellipsis
-  for numbers or labels, and never shrink type to save one orphan word.
+  for numbers or labels, and never shrink type to save one orphan word. Anything that
+  is truncated still has a way to its full value.
 - For an existing native app, polish its own style. Do not propose moving it to a newer
   platform look unless the user asked.
 
@@ -106,13 +113,16 @@ that request. Say so in one line ("I'll check it in the browser"), then do it. H
 depends on the harness and the platform:
 [references/verify.md](references/verify.md).
 
-The check covers the bounds from step 2: the changed state, at a narrow and a wide size,
-in light and dark when the app has both, plus the siblings from step 5. A spacing or
+The check covers the bounds from step 2: the changed state, at 320px, a phone, and a
+desktop width, in light and dark when the app has both, plus the siblings from step 5.
+A change to something interactive also gets a keyboard pass. A change to motion is
+watched slowed down, because a still frame cannot show it. A gesture is performed, not
+screenshotted. A spacing or
 alignment fix reports numbers: the element's measured box before and after, and the
 viewport width. Finish with one line:
 
 ```
-checked <N> places, changed <M>, left <K> as they were
+checked <N> places, changed <M>, left <K> as they were; untested: <what and why>
 ```
 
 If nothing can render here, say so and name the exact screen and state the user should
