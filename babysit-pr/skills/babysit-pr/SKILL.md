@@ -56,6 +56,8 @@ them. [references/gh.md](references/gh.md) lists the bots and how to read a summ
 - A summary only counts once it reviewed the head commit. If it names an older commit,
   or says the review is still running, the reviewer is not done and the PR is not
   finished, however green the checks are.
+- `coderabbitai` is advisory. Handle its findings when they arrive, but never wait for
+  its review, and never hold the finish line or a merge for it.
 - Skip findings the bot itself marks resolved or outdated. The count in the summary
   header is the number to reconcile against your list.
 
@@ -89,9 +91,22 @@ change behaviour, defer it rather than guess.
 
 Handle a round as a unit: decide every finding in it, make all the fixes, then push
 once. Each push restarts every review bot, so a push per comment multiplies the rounds
-and the wake-ups. From the third round on, bots keep surfacing fresh findings on fresh
-commits. Fix only bugs, security issues, and data loss at head, defer the rest, and
-say so.
+and the wake-ups.
+
+Budget three rounds of review findings. Bots keep finding something on every new
+commit, and each small fix they ask for adds code that draws the next finding, so a PR
+can end up several times the size it was meant to be. In the third round, fix only bugs
+at head. A fourth or fifth round is for security, permissions, data loss, and
+concurrency, and only while a finding of that kind is open. A round that returns only
+nits ends the loop.
+
+Decline these by default, with a written reason, and list them as follow-ups: tests the
+change does not need, guards for cases no caller can produce, added compatibility, and
+small performance costs. Between two fixes that both work, take the one that deletes or
+narrows code.
+
+The budget caps review findings only. A required check that fails is not a finding: it
+still gets fixed, whatever the round.
 
 ## Make the change
 
@@ -105,9 +120,11 @@ say so.
 ## Keep the branch current
 
 When the PR conflicts with its base, bring the base in. Rebase onto `origin/main` by
-default. If anyone else has pushed to this branch since your last push, merge
-`origin/main` instead, because a rebase would rewrite their commits. Push a rebased
-branch with `git push --force-with-lease`, never `--force`.
+default. Fetch first, and check `mergeStateStatus` before you call the PR ready: the
+watcher reports conflicts but not `BEHIND`, and a base that moved onto files this PR
+touches invalidates the last green run. If anyone else has pushed to this branch since
+your last push, merge `origin/main` instead, because a rebase would rewrite their
+commits. Push a rebased branch with `git push --force-with-lease`, never `--force`.
 
 When the PR is stacked on another PR and the base merges, retarget this one to the new
 base and `git rebase --onto` it, so the merged commits do not replay.
@@ -136,14 +153,27 @@ before anything else on resume, and update it after each push.
 
 ## Wait without polling hard
 
-If the harness has a pull request watcher, use it and end the turn. The watcher wakes
-you when checks finish or someone comments. Otherwise wait after a push with the agent's
-own wait or schedule primitive, or run `gh pr checks <number> --watch --interval 60`.
-Between rounds, back off from 1 minute toward 10 minutes. A tight loop burns requests
-and gains nothing, since bots take minutes to respond.
+Never write a poll loop, a `sleep`, or an `until` around `gh`. They hold the shell open
+and the harness blocks them. If the harness has a pull request watcher, use it and end the
+turn: it wakes you when checks finish or someone comments. Without one, run a single
+bounded wait in the background and read its output, for example `gh pr checks <number>
+--watch` under the harness's monitor tool with a timeout.
+
+- Only the thread that owns the PR watches it. A delegated reviewer or fix agent never
+  does.
+- A wake tells you something changed. It does not tell you what to do, so re-read the
+  state before you act.
+- Stop the watcher before you hand off, whether you are done, blocked, or asking the
+  user, because a watched thread is marked as still working.
+- A watcher that "stopped watching" after repeated read failures has usually run out of
+  GraphQL quota. Check it with `gh api rate_limit --jq .resources.graphql`, wait for the
+  reset in one background command, then watch again. Read the PR through the REST
+  fallbacks in [references/gh.md](references/gh.md) in the meantime.
 
 With several PRs, run one round per PR and start no more fix agents than the harness
-allows. Queue the rest instead of starting an agent that cannot run.
+allows. Queue the rest instead of starting an agent that cannot run. Give every agent
+that edits files an explicit capable model, because a harness default of a small model
+is meant for read-only searching.
 
 If nothing new has arrived since the last pass, stay quiet. Post nothing, change
 nothing, and keep waiting.
@@ -162,7 +192,9 @@ Finish when all of these hold:
 - Every required check has concluded `SUCCESS`. Check this with `gh pr checks --required`.
   Report a failing check that is not required, and leave it alone. A check the user has
   said to ignore in this conversation is ignored.
-- The ledger has no open finding, and every review bot has reviewed the head commit.
+- The ledger has no open finding, and every review bot except the advisory one has
+  reviewed the head commit.
+- The branch is not `BEHIND` its base and has no conflict.
 - `reviewDecision` is `APPROVED`, or it is empty and the repository requires no review.
   When the ruleset requires an approving review that the author cannot give, the finish
   line is the first two conditions, and the report says a reviewer or an admin merge is
@@ -183,6 +215,8 @@ Stop before the finish line when:
 - **A newer PR would make this one obsolete.** Stop and ask. Do not close the old PR
   yourself.
 - **The same failure survives three rounds.** Stop and report what you tried.
+- **The round budget is spent.** List every open finding as a follow-up, stop the
+  watcher, and report. Do not go back to waiting for the next bot comment.
 
 ## Never
 
