@@ -73,7 +73,23 @@ Screenshots prove layout, nothing else. For the rest, in the same browser-use ta
   step. Set the rate back to 1.
 - **Gestures:** perform the drag or swipe with pointer events, then swipe across the
   control along the page's scroll axis and confirm the page scrolls and the control
-  does not.
+  does not. Cancel one drag midway (`pointercancel`) and confirm the next drag works.
+- **Hierarchy:** take one screenshot with `js("document.body.style.filter = 'blur(6px)'")`
+  and one with `grayscale(1)`, then clear the filter. The focal element and the groups
+  must still read in order without detail or colour.
+- **Colour meaning:** when colour carries status or chart series, screenshot under
+  `cdp("Emulation.setEmulatedVisionDeficiency", type="deuteranopia")` and `"achromatopsia"`,
+  then reset with `type="none"`. Every state must still be told apart.
+- **Hostile content:** for lists, tables, and anything showing user text, put in a
+  100-character name, emoji, CJK text, and many rows (through the app's fixtures or a
+  temporary `js` edit of the rendered text), and confirm nothing overflows. Check the
+  longest locale the app ships.
+- **What a screenshot cannot show:** confirm the intended font loaded
+  (`js("document.fonts.check('16px \"Inter\"')")` with the product's font, and the
+  element's computed `fontFamily`), compute the
+  contrast of changed text from its rendered colours in both themes, and search the diff
+  for hex or `rgb()` literals, raw `z-index` numbers, and pixel values that are not in
+  the token file.
 
 A simulator does not show real touch feel or device performance. Name that in the
 `untested` part of the final line when it matters.
@@ -89,7 +105,8 @@ For React Native and Expo apps, T3 Code drives simulators and emulators:
    Expo Go, or `npx expo run:ios` when the project has native code, and wait on its log
    for the bundle to finish.
 3. Navigate to the screen with the `agent-device` CLI and take a `device_screenshot`.
-   Check the smallest supported phone and a large one, and dark mode when supported.
+   Check the smallest supported phone and a large one, dark mode when supported, and a
+   larger text size.
 4. `device_close` when done.
 
 Make one bounded attempt to drive the device to the screen. If taps, focus, or
@@ -102,11 +119,16 @@ state, rather than spending rounds on automation.
   `xcrun simctl boot <udid>` (already booted is fine) and
   `xcrun simctl bootstatus <udid> -b` to wait until it is ready. Start the app with
   `npx expo start --ios`, then `xcrun simctl io <udid> screenshot /tmp/ui-check.png`
-  and read the image.
+  and read the image. Switch appearance with `xcrun simctl ui <udid> appearance dark`
+  and text size with `xcrun simctl ui <udid> content_size extra-extra-large`, then set
+  both back.
 - **Android Emulator:** pick the serial from `adb devices` (start one with
   `emulator -avd <name>` if none is listed), then `adb -s <serial> wait-for-device`.
   Start the app with `npx expo start --android`, then
-  `adb -s <serial> exec-out screencap -p > /tmp/ui-check.png`.
+  `adb -s <serial> exec-out screencap -p > /tmp/ui-check.png`. Dark mode is
+  `adb -s <serial> shell cmd uimode night yes`, and a larger text size
+  `adb -s <serial> shell settings put system font_scale 1.3`; set both back after
+  (`night no`, `font_scale 1.0`).
 - **Web:** browser-use, as above, works in any harness. Without it, use the repo's
   Playwright or Cypress setup. Take screenshots at a phone and a desktop width.
 - **Nothing available:** say so, and give the user the exact screen, viewport, and
