@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# The transcripts show the same zsh error thirty times: a word of equals signs run as
+# a command, because zsh's EQUALS option is on.
+set -euo pipefail
+git init -q .
+git config user.email eval@example.com
+git config user.name Eval
+printf "# app\n" >README.md
+git add -A
+git commit -qm "init"
+git branch -M main
+git checkout -q -b agent-setup
+mkdir -p .claude .sessions/app
+printf '.sessions/\n' >.gitignore
+cat >CLAUDE.md <<'MD'
+# Project instructions
+
+- Run `pnpm test` before committing.
+- Never push to `main`.
+MD
+cat >.claude/settings.json <<'JSON'
+{ "permissions": { "allow": ["Bash(pnpm test)"] } }
+JSON
+write_transcript() {
+python3 - "$1" "$2" "$3" <<'PY'
+import json, os, sys, time
+path, error, count = sys.argv[1], sys.argv[2], int(sys.argv[3])
+ts = time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime(time.time() - 86400))
+with open(path, "w") as f:
+    f.write(json.dumps({"type": "user", "timestamp": ts, "message": {"role": "user", "content": "run the tests"}}) + "\n")
+    for i in range(count):
+        f.write(json.dumps({"type": "assistant", "timestamp": ts, "message": {"role": "assistant", "content": [
+            {"type": "tool_use", "id": f"t{i}", "name": "Bash", "input": {"command": "echo ===== && pnpm test"}}]}}) + "\n")
+        content = error if error else "ok"
+        f.write(json.dumps({"type": "user", "timestamp": ts, "message": {"role": "user", "content": [
+            {"type": "tool_result", "tool_use_id": f"t{i}", "is_error": bool(error), "content": content}]}}) + "\n")
+old = time.time() - 86400
+os.utime(path, (old, old))
+PY
+}
+write_transcript .sessions/app/s1.jsonl "Exit code 1
+(eval):1: ===== not found" 30
+git add -A
