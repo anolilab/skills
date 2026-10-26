@@ -2,7 +2,7 @@
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "babysit-pr",
   "displayName": "Babysit PR",
-  "description": "Takes an open pull request you wrote through review and CI rounds: fixes the findings that are real, answers and resolves the ones that are not, pushes, and stops at green and approved or at a stop point you set.",
+  "description": "Takes an open pull request you wrote through review and CI rounds: fixes the findings that are real, answers and resolves the ones that are not, pushes, and stops at green and approved or at a stop point you set. Marks every comment it posts as agent-written.",
   "version": "0.1.0",
   "author": {
     "name": "Anolilab",
@@ -11,6 +11,6 @@
   "homepage": "https://github.com/anolilab/skills/tree/main/babysit-pr",
   "repository": "https://github.com/anolilab/skills",
   "license": "MIT",
-  "keywords": ["babysit", "pull-request", "review", "ci", "github"],
+  "keywords": ["babysit", "pull-request", "review", "ci", "github", "comments"],
   "skills": "./skills/"
 }

@@ -8,6 +8,7 @@ Skills for Real Engineers. Straight from my .agents directory.
 | --- | --- |
 | [`deslop`](skills/deslop/) | Strips AI-generated slop out of the changes on a branch: narrating comments, unasked-for defensive code, `any`/`unknown` casts, single-use wrappers, mock-heavy tests. Behaviour stays identical. |
 | [`babysit-pr`](babysit-pr/skills/babysit-pr/) | Takes an open PR you wrote through review and CI rounds: fixes the real findings, answers and resolves the rest, pushes, and stops at green and approved or at a stop point you set. Merges only when you ask. |
+| [`leaving-pr-comments`](babysit-pr/skills/leaving-pr-comments/) | Formats every GitHub comment an agent posts for you: marks it as agent-written, keeps it short and checkable, strips secrets and local paths, and posts it without quoting damage. |
 
 ## Install
 
