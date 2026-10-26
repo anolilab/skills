@@ -27,6 +27,20 @@
       "description": "Compares another project against yours and returns a ranked, evidence-backed list of what it has that you lack. Builds nothing until you pick items.",
       "category": "developer-tools",
       "license": "MIT"
+    },
+    {
+      "name": "ui",
+      "source": "./ui",
+      "description": "Builds and fixes web and React Native or Expo interfaces in the product's own style, from a complaint or a screenshot, and checks the result rendered in a browser or simulator.",
+      "category": "developer-tools",
+      "license": "MIT"
+    },
+    {
+      "name": "agent-health",
+      "source": "./agent-health",
+      "description": "Audits a coding agent's setup and its recent session transcripts, and reports each problem with evidence and a pasteable fix. Report-only.",
+      "category": "developer-tools",
+      "license": "MIT"
     }
   ]
 }

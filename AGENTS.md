@@ -29,11 +29,13 @@ on whatever else lives here.
 └── skills/
     └── <skill-name>/
         ├── SKILL.md
-        └── references/  # optional, read only once the skill is running
+        ├── references/  # optional, read only once the skill is running
+        └── scripts/     # optional, executables the skill calls by path
 ```
 
-A skill directory holds only `SKILL.md` and its references. That is all the `npx`
-installer copies, and it is why hooks and evals sit at the plugin level instead.
+A skill directory holds `SKILL.md`, its references, and any scripts the skill runs.
+The `npx` installer copies the whole skill directory and nothing above it, which is
+why hooks and evals sit at the plugin level instead.
 
 **A new plugin needs a `marketplace.json` entry.** A new skill inside an existing
 plugin does not, because `plugin.json` points at the whole `skills/` directory.
