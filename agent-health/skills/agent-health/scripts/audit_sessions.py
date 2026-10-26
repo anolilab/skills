@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Summarise Claude Code session transcripts into health evidence.
 
-Reads the top-level transcripts under a projects directory (default
-~/.claude/projects), counts structured events only (tool calls, tool errors,
-user messages outside subagent sidechains), and prints bounded, redacted
-sections. Transcripts modified in the last few minutes are skipped so the
+Reads the transcripts under a projects directory (default ~/.claude/projects):
+the top-level sessions and, separately, the subagent transcripts stored under
+<session>/subagents/, with each subagent's type and model from its .meta.json.
+Counts structured events only (tool calls, tool errors, user messages, and
+corrections the user typed), and prints bounded, redacted sections. Transcripts modified in the last few minutes are skipped so the
 running session does not audit itself.
 
     audit_sessions.py [--projects-dir DIR] [--days 21] [--project SUBSTR]
@@ -37,6 +38,11 @@ KEY_VALUE = re.compile(
     r"[\"']?\s*[:=]\s*(?:bearer\s+)?)[\"']?[^\s\"',;]+"
 )
 HOME = str(Path.home())
+CORRECTION = re.compile(
+    r"^(no\b|nope\b|wrong\b|stop\b|don'?t\b|do not\b|that'?s not\b|not what\b|not that\b"
+    r"|i said\b|i told you\b|i asked\b|you didn'?t\b|why did you\b|revert\b|undo\b|again\?)",
+    re.I,
+)
 HARNESS_PREFIXES = (
     "<", "Update on pull request", "Stop hook feedback", "T3 Code ", "[Request interrupted",
     "Caveat:", "Note:", "This session is being continued", "[Image", "Delegated task",
@@ -110,6 +116,11 @@ def main() -> int:
         if args.project in f.parent.name
         and now - args.days * 86400 < f.stat().st_mtime < now - args.skip_live_minutes * 60
     ]
+    subagent_files = [
+        f for f in root.glob("*/*/subagents/*.jsonl")
+        if args.project in f.parents[2].name
+        and now - args.days * 86400 < f.stat().st_mtime < now - args.skip_live_minutes * 60
+    ]
 
     def phase(ts: str) -> str:
         if not args.since:
@@ -122,6 +133,49 @@ def main() -> int:
     compacted = 0
     wake_noop = Counter()
     wake_pr = Counter()
+    sub_calls = Counter()
+    sub_errors = Counter()
+    for f in subagent_files:
+        try:
+            meta = json.loads(f.with_suffix(".meta.json").read_text())
+        except (OSError, ValueError):
+            meta = {}
+        meta = meta if isinstance(meta, dict) else {}
+        agent_type = meta.get("agentType") or "?"
+        model = meta.get("model") or ""
+        tool_names: dict[str, str] = {}
+        try:
+            lines = f.open(errors="ignore")
+        except OSError:
+            continue
+        for line in lines:
+            try:
+                d = json.loads(line)
+            except ValueError:
+                continue
+            if not isinstance(d, dict):
+                continue
+            msg = d.get("message")
+            msg = msg if isinstance(msg, dict) else {}
+            content = msg.get("content")
+            if not isinstance(content, list):
+                continue
+            p = phase(d.get("timestamp") or "")
+            if d.get("type") == "assistant":
+                model = model or msg.get("model") or ""
+                for b in content:
+                    if isinstance(b, dict) and b.get("type") == "tool_use":
+                        tool_names[b.get("id", "")] = b.get("name", "?")
+                        sub_calls[f"{agent_type} model={model or 'unset'}"] += 1
+                        by_phase["subagent tool calls"][p] += 1
+            elif d.get("type") == "user":
+                for b in content:
+                    if isinstance(b, dict) and b.get("type") == "tool_result" and b.get("is_error"):
+                        raw = b.get("content")
+                        raw = raw if isinstance(raw, str) else text_of(raw) or json.dumps(raw)[:400]
+                        tool = tool_names.get(b.get("tool_use_id", ""), "?")
+                        sub_errors[f"{model or 'unset'} {tool}: {normalise_error(raw)}"] += 1
+                        by_phase["subagent tool errors"][p] += 1
     for f in files:
         session_compacted = False
         tool_names: dict[str, str] = {}
@@ -208,13 +262,16 @@ def main() -> int:
                 if text.startswith(HARNESS_PREFIXES):
                     continue
                 by_phase["user prompts"][p] += 1
+                if CORRECTION.match(text):
+                    by_phase["user corrections"][p] += 1
+                    c["corrections"][redact(text)[:90]] += 1
                 if len(text) <= 120:
                     c["repeated prompts"][redact(text).lower()] += 1
         if pending_wake is not None:
             wake_noop["noop"] += 1
         compacted += session_compacted
 
-    print(f"=== SCOPE ===\ntranscripts: {len(files)}  days: {args.days}  project filter: {args.project or '(all)'}"
+    print(f"=== SCOPE ===\ntranscripts: {len(files)}  subagent transcripts: {len(subagent_files)}  days: {args.days}  project filter: {args.project or '(all)'}"
           f"  sessions compacted at least once: {compacted}")
     if args.since:
         print(f"split at: {args.since}")
@@ -231,6 +288,18 @@ def main() -> int:
             print(f"\n=== {section.upper()} ===")
             for k, v in c[section].most_common(TOP):
                 print(f"{v:6d}  {k}")
+    if sub_calls:
+        print("\n=== SUBAGENTS (tool calls by type and model) ===")
+        for k, v in sub_calls.most_common(TOP):
+            print(f"{v:6d}  {k}")
+    if sub_errors:
+        print("\n=== SUBAGENT ERRORS (by model) ===")
+        for k, v in sub_errors.most_common(TOP):
+            print(f"{v:6d}  {k}")
+    if c["corrections"]:
+        print("\n=== CORRECTIONS (the user pushing back) ===")
+        for k, v in c["corrections"].most_common(TOP):
+            print(f"{v:6d}  {k}")
     if wake_pr:
         print("\n=== MOST-WOKEN PRS ===")
         for k, v in wake_pr.most_common(5):

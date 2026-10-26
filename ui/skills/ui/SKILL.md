@@ -34,7 +34,11 @@ Whatever the path, the change is not done until it has been seen rendered. See
    diagnosis; "the dialog's body is 48px wider than its header" is.
 2. **Set the bounds** before touching code:
    - *change*: the element, viewport, and state that may change;
-   - *keep*: the neighbours, content, and behaviour that must not;
+   - *keep*: everything outside the named defect that must not change: neighbours,
+     content, and behaviour, including what breaks
+     unseen: route slugs and anchor ids, form field names and order (autofill depends
+     on them), analytics event names, `data-testid` and other selectors tests use, nav
+     labels, legal or consent copy, and existing focus order, alt text, and contrast;
    - *proof*: the render that will show the fix, and the measurement it will report.
 3. **Find the code that draws it.** Start from the route or screen, and follow it
    through the components and variants to the token or style that produces the value.
@@ -43,7 +47,8 @@ Whatever the path, the change is not done until it has been seen rendered. See
 4. **Make the smallest change** that fixes the defect, in this order: delete what
    causes it, reuse a value or variant the product already has, correct an existing
    value, and only then add something new. When a change does not take effect, look for
-   two rules cancelling each other before adding a third.
+   two rules cancelling each other before adding a third. Fix the parent rather than
+   patching around it with negative margins or absolute positioning.
 5. **Check every place the same code runs.** A fix to a shared component or token
    reaches all its uses; check them, not only the reported one.
 
@@ -62,10 +67,13 @@ The existing app is the design. Before writing anything:
 
 - check the installed component library first: the skeleton, empty state, alert, or
   form field you need probably exists;
-- find the nearest sibling (another dialog, sheet, toast, or list row) and reuse its
-  container, spacing, type, colour tokens, motion, and wording;
+- find the nearest sibling (another dialog, sheet, toast, or list row) and write down
+  its radius, how it separates from the surface, density, type roles, motion, and
+  wording, plus what the product never uses (shadows, button icons, gradients). Reuse
+  all of it. When siblings disagree, follow the majority, not the outlier;
 - copy its states: loading, empty, error, disabled, focused;
-- give a destructive action a confirmation or an undo;
+- give a destructive action an undo, or a confirmation when it cannot be undone;
+- add every new string to each locale catalog the app has;
 - a new visual style needs a stated reason why no existing component fits.
 
 ## Build
@@ -88,7 +96,7 @@ two or three labelled options rather than one guess.
 
 The craft rules, bans, and type and colour defaults are in
 [references/craft.md](references/craft.md). Read it for Add and Build, and for any Fix
-that touches type, colour, or motion.
+that touches type, colour, motion, forms, or overflow.
 
 ## Review
 
@@ -98,7 +106,8 @@ Read-only. Report problems, change nothing until the user picks.
   a sibling that does it right, or a direct contradiction on the same screen), proof
   that the code you cite actually renders on that screen, and one correction the
   evidence settles. "Could be cleaner" is not a finding.
-- Hierarchy, density, and clarity need the rendered screen, not source alone.
+- Hierarchy, density, and clarity need the rendered screen, not source alone. Name the
+  screen's focal element, then blur the screenshot: the eye should still land there.
 - Try to refute each finding before reporting it, and merge findings with one cause.
 - Report at most three, ranked by evidence and reach, then ask which to fix.
 
@@ -120,11 +129,20 @@ Read-only. Report problems, change nothing until the user picks.
   then a selected, open, or loading state. Never show a change by motion alone.
 - While data is still on its way, show progress. The "nothing here" state is for a
   request that finished and returned nothing.
+- A submit cannot fire twice, a failed request keeps what the user typed, and an
+  optimistic update rolls back when it fails. Cancel in-flight reads when the component
+  unmounts; do not abort a submit or other write unless its API supports cancellation,
+  since the server may already have applied it.
 - A slot that swaps content by state keeps one font size across states, so it does not
   jump.
 - Text fits by design: shorten the format or cap the content, never rely on an ellipsis
   for numbers or labels, and never shrink type to save one orphan word. Anything that
   is truncated still has a way to its full value.
+- Nothing shifts once rendered: reserve space for images and async content, and keep
+  border width, weight, and padding the same across hover, selected, and error states.
+- React Native and Expo screens follow the platform rules in
+  [references/craft.md](references/craft.md#react-native-and-expo): safe areas, the
+  keyboard, layering, one scroll container, and both platforms checked.
 - For an existing native app, polish its own style. Do not propose moving it to a newer
   platform look unless the user asked.
 

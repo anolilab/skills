@@ -3,8 +3,8 @@ name: agent-health
 description: >
   Audits a coding agent's own setup and how it has actually been working: instruction
   files, settings, hooks, MCP servers, memory, installed skills, and the session
-  transcripts (tool errors, blocked commands, hook churn, subagent models, PR wake-ups,
-  repeated prompts). Reports findings with evidence and a pasteable fix. Use when the
+  transcripts (tool errors, blocked commands, hook churn, subagent models and errors,
+  PR wake-ups, user corrections, repeated prompts). Reports findings with evidence and a pasteable fix. Use when the
   user asks to check the agent setup, audit Claude Code config, says the agent ignores
   instructions or keeps hitting the same errors, or asks how the last weeks of agent
   work went. Report-only. Not for application health checks, bugs, or PR review.
@@ -30,7 +30,25 @@ evidence, and give a fix the user can paste. Change nothing: this is a report.
 
 ## 1. Read the setup
 
-Read every surface that shapes the agent, global first, then project:
+Run the bundled setup check first. It proves what can be proven from files, and prints
+one line per finding with its severity:
+
+```bash
+python3 -I <this skill's dir>/scripts/check_setup.py --project <repo>
+```
+
+It reports settings that are not valid JSON, hook commands whose script is missing or
+not executable, a tracked `settings.local.json`, secrets in settings, instructions, and
+memory (file, line, and kind, never the value), paths named in memory or instructions
+that no longer exist, MCP servers whose command is not installed, skills with the same
+name in two places, and skills whose descriptions use near-identical wording. Pass
+`--no-global` to leave `~/.claude` out.
+
+Its skill-overlap check is lexical. Two skills that do the same job in different words
+score low, so still read the descriptions of skills in one domain (UI, review, PR work)
+and judge which ones compete for the same requests.
+
+Then read every surface that shapes the agent, global first, then project:
 
 - instructions: `~/.claude/CLAUDE.md`, the project's `CLAUDE.md`, `.claude/CLAUDE.md`,
   `CLAUDE.local.md`, and `AGENTS.md`, and any file they import. By default Claude Code
@@ -64,7 +82,8 @@ python3 -I <this skill's dir>/scripts/audit_sessions.py --project <name-substrin
 ```
 
 It counts structured events only, skips transcripts still being written, redacts
-tokens and paths, and prints these sections:
+tokens and paths, reads subagent transcripts (`<session>/subagents/`) separately from
+the main sessions, and prints these sections:
 
 | Section | What to look for |
 | --- | --- |
@@ -72,6 +91,8 @@ tokens and paths, and prints these sections:
 | STOP HOOKS | a hook that blocks far more often than its skill runs is asking for passes nobody needs |
 | AGENTS | agents that edit files (`worktree`) with `model=unset` run on the session default; check that default |
 | COUNTS, wake-ups | many PR wake-ups answered with no tool call, or a few PRs with very high counts, mean review loops without a stop |
+| SUBAGENTS, SUBAGENT ERRORS | tool calls and error classes per subagent type and model; an error class that appears only under one model points at that model's role, not the setup |
+| CORRECTIONS | prompts that start by pushing back ("no", "wrong", "I said", "revert"); the same correction more than once is an instruction that is not working. The match is on the first word only, so read the listed text: "no worries" is not a correction |
 | REPEATED PROMPTS | the same short instruction typed many times is a skill or a default waiting to be written |
 | BASH HEADS | the same prefix on thousands of calls (`export PATH=...`) is a workaround for a broken environment |
 

@@ -1,6 +1,6 @@
 # agent-health evals
 
-Three cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
+Four cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 `scaffold.sh` that builds a repository with agent instructions and settings, plus
 synthetic session transcripts under `.sessions/`. The prompts point the auditor at that
 directory, so no case reads the real `~/.claude`.
@@ -9,6 +9,7 @@ directory, so no case reads the real `~/.claude`.
 | --- | --- |
 | `leaked-local-settings` | Rates a tracked `settings.local.json` holding a token as Critical without printing the token |
 | `repeated-shell-errors` | Folds thirty identical zsh errors into one finding with a pasteable fix |
+| `broken-hook-stale-memory` | Reports a Stop hook whose script is gone, a memory naming a deleted path, and a correction the user typed three times |
 | `clean-setup` | Reports nothing to fix and changes nothing. Negative case |
 
 ## Running
