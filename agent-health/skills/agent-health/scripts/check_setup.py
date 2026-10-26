@@ -46,6 +46,8 @@ STOP = set(
     "where which while will with without work your".split()
 )
 
+INTERPRETERS = {"bash", "sh", "zsh", "python", "python3", "node", "bun", "deno", "ruby", "npx", "tsx", "uv", "env"}
+
 findings: list[tuple[str, str, str]] = []
 PROJECT = Path(".")
 
@@ -111,13 +113,15 @@ def check_hooks(settings: dict, where: Path, base: Path) -> None:
                 words = cmd.split()
                 for i, written in enumerate(words):
                     written = written.replace('"', "").replace("'", "")
-                    token = re.sub(r"\$\{?CLAUDE_PROJECT_DIR\}?", str(base), written)
+                    if os.path.basename(written) in INTERPRETERS:
+                        continue
+                    token = re.sub(r"\$\{?CLAUDE_PROJECT_DIR\}?", str(PROJECT), written)
                     token = os.path.expandvars(os.path.expanduser(token))
                     if "$" in token or not re.search(r"\.(sh|py|js|mjs|cjs|ts|rb)$|^(~|\.{1,2})?/", token):
                         continue
                     target = Path(token)
                     target = target if target.is_absolute() else base / target
-                    shown = redact(written).replace("<tmp>", written[:80])
+                    shown = redact(written)
                     if not target.exists():
                         add("critical", f"{where} hooks.{event}", f"runs `{shown}`, which does not exist")
                     elif i == 0 and not os.access(target, os.X_OK):
@@ -192,13 +196,14 @@ def main() -> int:
     for name in ("settings.json", "settings.local.json"):
         sources.append((project / ".claude" / name, project, "project"))
     for path, base, _ in sources:
-        settings = load_json(path)
-        if settings is None:
+        if not path.is_file():
             continue
-        check_hooks(settings, path, base)
         scan_secrets(path)
         if path.name == "settings.local.json" and tracked(project, ".claude/settings.local.json"):
             add("critical", str(path), "tracked by git; it is meant to be personal and often holds tokens")
+        settings = load_json(path)
+        if settings is not None:
+            check_hooks(settings, path, base)
 
     for mcp in [project / ".mcp.json"] + ([] if args.no_global else [home.parent / ".claude.json"]):
         config = load_json(mcp)

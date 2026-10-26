@@ -121,16 +121,18 @@ state, rather than spending rounds on automation.
   `xcrun simctl boot <udid>` (already booted is fine) and
   `xcrun simctl bootstatus <udid> -b` to wait until it is ready. Start the app with
   `npx expo start --ios`, then `xcrun simctl io <udid> screenshot /tmp/ui-check.png`
-  and read the image. Switch appearance with `xcrun simctl ui <udid> appearance dark`
-  and text size with `xcrun simctl ui <udid> content_size extra-extra-large`, then set
-  both back.
+  and read the image. For dark mode and large text, first note the current values
+  (`xcrun simctl ui <udid> appearance` and `xcrun simctl ui <udid> content_size` print
+  them), then set `appearance dark` and `content_size extra-extra-large`, take and
+  read a screenshot for each, and set the noted values back.
 - **Android Emulator:** pick the serial from `adb devices` (start one with
   `emulator -avd <name>` if none is listed), then `adb -s <serial> wait-for-device`.
   Start the app with `npx expo start --android`, then
-  `adb -s <serial> exec-out screencap -p > /tmp/ui-check.png`. Dark mode is
-  `adb -s <serial> shell cmd uimode night yes`, and a larger text size
-  `adb -s <serial> shell settings put system font_scale 1.3`; set both back after
-  (`night no`, `font_scale 1.0`).
+  `adb -s <serial> exec-out screencap -p > /tmp/ui-check.png`. For dark mode and large
+  text, first note the current values (`adb -s <serial> shell cmd uimode night` and
+  `adb -s <serial> shell settings get system font_scale`), then set
+  `shell cmd uimode night yes` and `shell settings put system font_scale 1.3`, take and
+  read a screenshot for each, and write the noted values back.
 - **Web:** browser-use, as above, works in any harness. Without it, use the repo's
   Playwright or Cypress setup. Take screenshots at a phone and a desktop width.
 - **Nothing available:** say so, and give the user the exact screen, viewport, and

@@ -6,6 +6,7 @@
 - The delete action uses `Button` with `tone="danger"`, and confirming it calls a delete callback (for example an `onConfirm` prop); cancelling closes the dialog without calling it.
 - Any new styles use only `var(--...)` tokens from `src/styles/tokens.css`.
 - The dialog has a cancel action and an accessible title.
+- The dialog tells the user that deleting the project cannot be undone.
 
 ## Fails
 

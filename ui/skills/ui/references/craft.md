@@ -139,8 +139,9 @@ system package), the library is the vocabulary:
   decision. Overlays from a component library (dialog, sheet, popover) manage their own
   stacking through a portal: do not add a `z-index` to them.
 - A dropdown or tooltip positioned absolutely inside an `overflow: hidden` or
-  `overflow: auto` ancestor gets cut off. Render it in a portal, the popover API, or
-  `position: fixed`.
+  `overflow: auto` ancestor gets cut off. Render it in a portal (the component
+  library's, when it has one). Use the popover API or `position: fixed` only where the
+  app has no portal.
 - When a spacing change does not take effect, look for two rules fighting before adding
   a third value: a class and an element selector, or a parent's padding and a child's
   margin, often cancel out.
@@ -383,14 +384,17 @@ before adding one. A fix on one platform often breaks the other: check iOS and A
   use `boxShadow` when the app is on the new architecture and the repo already does.
   Compare the two platforms side by side.
 - **Animation:** gestures and anything that must stay smooth while JavaScript is busy
-  run on the UI thread through Reanimated and `react-native-gesture-handler`. The
-  built-in `Animated` with `useNativeDriver: true` covers only `transform` and
-  `opacity`.
+  run on the UI thread through Reanimated and `react-native-gesture-handler`. Which
+  properties the built-in `Animated` native driver can animate depends on the app's
+  React Native version (older versions exclude layout properties), so check the version
+  before relying on it.
 - **Text:** leave `allowFontScaling` on and design for large text. On Android,
   `includeFontPadding: false` fixes text that looks off-centre in a button.
-- **Theme:** the status bar style follows the screen background in light and dark
-  (`expo-status-bar`, `style="auto"`), and colours come from the theme hook the app
-  uses, never hard-coded per screen.
+- **Theme:** the status bar text contrasts with the screen behind it.
+  `expo-status-bar` with `style="auto"` follows the system colour scheme, not the
+  screen, so a screen whose background differs from the app's scheme (a dark media
+  screen in light mode) sets `style="light"` or `"dark"` explicitly. Colours come from
+  the theme hook the app uses, never hard-coded per screen.
 
 ## Common giveaways
 

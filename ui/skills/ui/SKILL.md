@@ -34,7 +34,8 @@ Whatever the path, the change is not done until it has been seen rendered. See
    diagnosis; "the dialog's body is 48px wider than its header" is.
 2. **Set the bounds** before touching code:
    - *change*: the element, viewport, and state that may change;
-   - *keep*: the neighbours, content, and behaviour that must not, including what breaks
+   - *keep*: everything outside the named defect that must not change: neighbours,
+     content, and behaviour, including what breaks
      unseen: route slugs and anchor ids, form field names and order (autofill depends
      on them), analytics event names, `data-testid` and other selectors tests use, nav
      labels, legal or consent copy, and existing focus order, alt text, and contrast;
@@ -129,8 +130,9 @@ Read-only. Report problems, change nothing until the user picks.
 - While data is still on its way, show progress. The "nothing here" state is for a
   request that finished and returned nothing.
 - A submit cannot fire twice, a failed request keeps what the user typed, and an
-  optimistic update rolls back when it fails. Cancel requests when the component
-  unmounts.
+  optimistic update rolls back when it fails. Cancel in-flight reads when the component
+  unmounts; do not abort a submit or other write unless its API supports cancellation,
+  since the server may already have applied it.
 - A slot that swaps content by state keeps one font size across states, so it does not
   jump.
 - Text fits by design: shorten the format or cap the content, never rely on an ellipsis
