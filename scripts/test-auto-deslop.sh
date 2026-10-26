@@ -97,6 +97,41 @@ printf '' | bash "$HOOK" >/dev/null 2>&1
 [ "$?" -eq 0 ] && pass "empty payload exits 0" \
     || fail "empty payload should exit 0"
 
+# 9. A change that only touches docs, lockfiles, snapshots, or generated output has no
+# code to review, so it never blocks.
+repo="$(new_repo noncode)"
+git -C "$repo" checkout -q -- file.txt
+mkdir -p "$repo/src/_generated" "$repo/docs"
+echo x >"$repo/README.md"
+echo x >"$repo/pnpm-lock.yaml"
+echo x >"$repo/src/_generated/api.ts"
+run_hook "$repo" false
+[ "$RC" -eq 0 ] && [ -z "$ERR" ] && pass "docs, lockfile, and generated-only change exits 0 silently" \
+    || fail "non-code change should exit 0 silently (rc=$RC err=$ERR)"
+
+# 10. A mixed change blocks, and lists only the code file.
+repo="$(new_repo mixed)"
+echo x >"$repo/README.md"
+echo x >"$repo/src.ts"
+run_hook "$repo" false
+if [ "$RC" -eq 2 ] && printf '%s' "$ERR" | grep -q 'src.ts' && ! printf '%s' "$ERR" | grep -q 'README.md'; then
+    pass "mixed change blocks and lists only the code file"
+else
+    fail "mixed change should block and list only src.ts (rc=$RC err=$ERR)"
+fi
+
+# 11. After a pass, a later edit is scoped to the files changed since that pass.
+repo="$(new_repo sincepass)"
+run_hook "$repo" false
+run_hook "$repo" true
+echo x >"$repo/later.ts"
+run_hook "$repo" false
+if [ "$RC" -eq 2 ] && printf '%s' "$ERR" | grep -q 'later.ts' && ! printf '%s' "$ERR" | grep -q 'file.txt'; then
+    pass "follow-up edit after a pass lists only the files changed since"
+else
+    fail "follow-up edit should list only later.ts (rc=$RC err=$ERR)"
+fi
+
 if [ "$failures" -gt 0 ]; then
     echo "$failures check(s) failed" >&2
     exit 1
