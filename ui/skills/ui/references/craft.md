@@ -17,6 +17,7 @@
 - Data display
 - Accessibility
 - Responsive and native
+- React Native and Expo
 - Common giveaways
 
 ## Read the product first
@@ -353,6 +354,43 @@ For drag, swipe, sheets, and sliders:
   selection.
 - Truncated or clipped content needs a way to the full value: a tooltip that keyboard
   and touch can reach, a detail view, or wrapping.
+
+## React Native and Expo
+
+Use what the repo already has (its navigation, keyboard, list, and animation libraries)
+before adding one. A fix on one platform often breaks the other: check iOS and Android.
+
+- **Safe areas:** `react-native-safe-area-context`, with one `SafeAreaProvider` at the
+  root and `useSafeAreaInsets` or its `SafeAreaView` per screen, choosing the edges.
+  Not React Native's own `SafeAreaView`, which only works on iOS. A navigator header
+  already pads the top; padding again doubles the gap.
+- **Keyboard:** a composer or form stays visible with the keyboard open. On iOS wrap the
+  screen in `KeyboardAvoidingView` with `behavior="padding"`; on Android rely on
+  `adjustResize` (`softwareKeyboardLayoutMode: "resize"` in the Expo config), or the
+  keyboard library the repo uses on both. Scroll views holding inputs set
+  `keyboardShouldPersistTaps="handled"` so the first tap on a button is not swallowed.
+- **Layering:** `zIndex` only orders siblings, and on Android `elevation` also changes
+  stacking. A banner that must sit behind a composer goes in the same parent, in the
+  right order, not on a higher `zIndex` in another branch of the tree.
+- **Scroll:** one scroll container per screen, and the screen root gets `flex: 1` so it
+  does not grow with its content. Never put a `FlatList` inside a `ScrollView` of the
+  same direction: virtualisation stops and every row renders. Long or growing lists use
+  `FlatList` (or the repo's `FlashList`) with a stable `keyExtractor`. An empty state
+  that should fill the screen uses `contentContainerStyle={{ flexGrow: 1 }}`.
+- **Press:** `Pressable` with a pressed style, and `android_ripple` where the platform
+  look calls for it. Small icons get `hitSlop` to reach the touch target size.
+- **Shadows:** iOS uses the `shadow*` props and Android uses `elevation`; set both, or
+  use `boxShadow` when the app is on the new architecture and the repo already does.
+  Compare the two platforms side by side.
+- **Animation:** gestures and anything that must stay smooth while JavaScript is busy
+  run on the UI thread through Reanimated and `react-native-gesture-handler`. The
+  built-in `Animated` with `useNativeDriver: true` covers only `transform` and
+  `opacity`.
+- **Text:** leave `allowFontScaling` on and design for large text. On Android,
+  `includeFontPadding: false` fixes text that looks off-centre in a button.
+- **Theme:** the status bar style follows the screen background in light and dark
+  (`expo-status-bar`, `style="auto"`), and colours come from the theme hook the app
+  uses, never hard-coded per screen.
 
 ## Common giveaways
 

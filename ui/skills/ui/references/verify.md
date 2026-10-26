@@ -105,8 +105,10 @@ For React Native and Expo apps, T3 Code drives simulators and emulators:
    Expo Go, or `npx expo run:ios` when the project has native code, and wait on its log
    for the bundle to finish.
 3. Navigate to the screen with the `agent-device` CLI and take a `device_screenshot`.
-   Check the smallest supported phone and a large one, dark mode when supported, and a
-   larger text size.
+   Check the smallest supported phone and a large one, dark mode when supported, a
+   larger text size, and the keyboard open for any screen with an input (in the iOS
+   Simulator, turn off I/O > Keyboard > Connect Hardware Keyboard, or the software
+   keyboard never appears).
 4. `device_close` when done.
 
 Make one bounded attempt to drive the device to the screen. If taps, focus, or

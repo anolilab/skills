@@ -138,6 +138,9 @@ Read-only. Report problems, change nothing until the user picks.
   is truncated still has a way to its full value.
 - Nothing shifts once rendered: reserve space for images and async content, and keep
   border width, weight, and padding the same across hover, selected, and error states.
+- React Native and Expo screens follow the platform rules in
+  [references/craft.md](references/craft.md#react-native-and-expo): safe areas, the
+  keyboard, layering, one scroll container, and both platforms checked.
 - For an existing native app, polish its own style. Do not propose moving it to a newer
   platform look unless the user asked.
 
