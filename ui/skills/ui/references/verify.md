@@ -2,32 +2,49 @@
 
 ## Contents
 
-- In T3 Code: web
+- Web: browser-use
 - In T3 Code: iOS and Android
 - Outside T3 Code
 - Measuring
 
 Pick the first route that works. Close what you opened when you are done.
 
-## In T3 Code: web
+Start dev servers and Expo in the background, and wait on their log for the ready line
+with the harness's background-wait or monitor tool, or read the log once. Never a
+`sleep` loop.
 
-T3 Code's preview tools are deferred: load them with ToolSearch (`preview_open`,
-`preview_resize`, `preview_set_appearance`, `preview_snapshot`, `preview_evaluate`,
-`t3_preview_close`) before calling them. Their own description allows them when the
-request asks to check an edit in the browser, which a UI change request does, so tell
-the user you will check it.
+## Web: browser-use
 
-1. Start the dev server in the background with the repo's own script (`pnpm dev`, or
-   what `package.json` names). Wait on its log for the ready line with
-   `t3_background_wait`, never with `sleep`, and read the URL from it.
-2. `preview_open` with that URL.
-3. `preview_resize` to a phone preset (`iphone-se` or `pixel-7`), then to a desktop
-   width (`freeform`, 1440 x 900). Add the width where the layout breaks if the fix is
-   about a breakpoint.
-4. `preview_set_appearance` to `dark` and `light` when the app supports both.
-5. `preview_snapshot` with `includeImage: true` at each size and state. Use `save: true`
-   for the screenshots you put in the handoff.
-6. Close the tab with `t3_preview_close` and stop the dev server.
+Use the `browser-use` CLI (install: `uv tool install browser-use`; its skill:
+`npx skills add https://github.com/browser-use/browser-use --skill browser-use`). It
+drives the user's running Chrome over CDP. The first run asks Chrome to allow remote
+debugging; on macOS, leave that command running and call `browser-use mac-approve` in a
+second call. `browser-use --doctor` diagnoses a daemon that will not connect.
+
+1. Start the dev server with the repo's own script (`pnpm dev`, or what `package.json`
+   names) and read the URL from its log.
+2. Open one tab, then check each size and colour scheme from the bounds:
+
+```bash
+browser-use <<'PY'
+new_tab("http://localhost:5173/settings")
+wait_for_load()
+for name, w, h, mobile in [("phone", 375, 812, True), ("desktop", 1440, 900, False)]:
+    cdp("Emulation.setDeviceMetricsOverride", width=w, height=h, deviceScaleFactor=2, mobile=mobile)
+    for scheme in ("light", "dark"):
+        cdp("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": scheme}])
+        capture_screenshot(f"/tmp/ui-{name}-{scheme}.png", max_dim=1800)
+cdp("Emulation.clearDeviceMetricsOverride")
+cdp("Emulation.setEmulatedMedia", features=[])
+PY
+```
+
+3. Read the screenshots. Reach the state under test (open the dialog, hover, focus,
+   load an empty list) with the accessibility tree and `click_at_xy`, as the
+   `browser-use` skill describes, before capturing.
+4. Clear the overrides, close the tab you opened, and stop the dev server.
+
+Screenshots are in device pixels; coordinates for clicks are CSS pixels.
 
 ## In T3 Code: iOS and Android
 
@@ -37,8 +54,8 @@ For React Native and Expo apps, T3 Code drives simulators and emulators:
    boots the device and returns the `agent-device` CLI command pinned to it; use that
    CLI for taps, typing, and navigation.
 2. Start the app on it in the background: `npx expo start --ios` (or `--android`) for
-   Expo Go, or `npx expo run:ios` when the project has native code. Wait on its log for
-   the bundle to finish with `t3_background_wait`, never with `sleep`.
+   Expo Go, or `npx expo run:ios` when the project has native code, and wait on its log
+   for the bundle to finish.
 3. Navigate to the screen with the `agent-device` CLI and take a `device_screenshot`.
    Check the smallest supported phone and a large one, and dark mode when supported.
 4. `device_close` when done.
@@ -49,16 +66,13 @@ state, rather than spending rounds on automation.
 
 ## Outside T3 Code
 
-Start dev servers and Expo in the background and wait on their log with the harness's
-monitor or background-wait tool, or read the log once; never a `sleep` loop.
-
 - **iOS Simulator:** `xcrun simctl list devices booted`, start the app with
   `npx expo start --ios`, then `xcrun simctl io booted screenshot /tmp/ui-check.png`
   and read the image.
 - **Android Emulator:** `adb devices`, start the app with `npx expo start --android`,
   then `adb exec-out screencap -p > /tmp/ui-check.png`.
-- **Web:** use the repo's Playwright or Cypress setup if it has one, or the harness's
-  browser tool. Take screenshots at a phone and a desktop width.
+- **Web:** browser-use, as above, works in any harness. Without it, use the repo's
+  Playwright or Cypress setup. Take screenshots at a phone and a desktop width.
 - **Nothing available:** say so, and give the user the exact screen, viewport, and
   state to look at.
 
@@ -74,5 +88,5 @@ after the change:
 });
 ```
 
-In T3 Code run it with `preview_evaluate`. Report both sets and the viewport width.
+With browser-use, run it inside `js(...)`. Report both sets and the viewport width.
 On a device, compare the two screenshots at the same scale.

@@ -102,7 +102,7 @@ that touches type, colour, or motion.
 ## Check it rendered
 
 When the user asks for a UI change, checking it in a browser or simulator is part of
-that request. Say so in one line ("I'll check it in the preview"), then do it. How
+that request. Say so in one line ("I'll check it in the browser"), then do it. How
 depends on the harness and the platform:
 [references/verify.md](references/verify.md).
 
