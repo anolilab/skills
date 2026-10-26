@@ -32,9 +32,13 @@ evidence, and give a fix the user can paste. Change nothing: this is a report.
 
 Read every surface that shapes the agent, global first, then project:
 
-- instructions: `~/.claude/CLAUDE.md`, the project's `CLAUDE.md` and `AGENTS.md`, and
-  any file they import. Claude Code reads `CLAUDE.md`, so an `AGENTS.md` that no
-  `CLAUDE.md` imports never reaches it.
+- instructions: `~/.claude/CLAUDE.md`, the project's `CLAUDE.md`, `.claude/CLAUDE.md`,
+  `CLAUDE.local.md`, and `AGENTS.md`, and any file they import. By default Claude Code
+  reads `AGENTS.md` only when none of those three project `CLAUDE.md` files exists in the
+  working directory or above it; when one does, `AGENTS.md` is ignored unless a
+  `CLAUDE.md` imports it. The **Project instructions** setting can change this, and
+  older Claude Code versions do not read `AGENTS.md` at all. Check both before
+  reporting instructions as unreachable.
 - settings: `~/.claude/settings.json`, `.claude/settings.json`, and
   `.claude/settings.local.json`, which overrides both. A tracked `settings.local.json`
   is a leak risk: check `git ls-files`.

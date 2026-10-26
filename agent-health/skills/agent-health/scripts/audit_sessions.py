@@ -32,6 +32,10 @@ SECRET = re.compile(
     r"|npm_[A-Za-z0-9]{20,}|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}"
     r"|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}|[A-Fa-f0-9]{40,}|[A-Za-z0-9+/]{48,}={0,2})"
 )
+KEY_VALUE = re.compile(
+    r"(?i)((?:authorization|bearer|password|passwd|secret|token|api[_-]?key|access[_-]?key|auth[a-z_]*)"
+    r"[\"']?\s*[:=]\s*(?:bearer\s+)?)[\"']?[^\s\"',;]+"
+)
 HOME = str(Path.home())
 HARNESS_PREFIXES = (
     "<", "Update on pull request", "Stop hook feedback", "T3 Code ", "[Request interrupted",
@@ -41,6 +45,8 @@ HARNESS_PREFIXES = (
 
 def redact(text: str) -> str:
     text = SECRET.sub("<redacted>", text)
+    text = KEY_VALUE.sub(r"\1<redacted>", text)
+    text = re.sub(r"(?i)\bbearer\s+\S+", "Bearer <redacted>", text)
     text = text.replace(HOME, "~")
     text = re.sub(r"/(?:private/)?(?:tmp|var/folders)/\S+", "<tmp>", text)
     return " ".join(text.split())[:EXCERPT]
@@ -69,8 +75,8 @@ def normalise_error(text: str) -> str:
     for pattern, label in rules:
         match = re.search(pattern, text)
         if match:
-            return match.expand(label) if "\\1" in label else label
-    return redact(re.sub(r"\d+", "N", first))
+            return redact(match.expand(label)) if "\\1" in label else label
+    return re.sub(r"\d+", "N", redact(first))
 
 
 def text_of(content) -> str:
@@ -130,13 +136,16 @@ def main() -> int:
                 d = json.loads(line)
             except ValueError:
                 continue
+            if not isinstance(d, dict):
+                continue
             ts = d.get("timestamp") or last_ts
             last_ts = ts
             if d.get("type") == "system" and d.get("subtype") == "compact_boundary":
                 session_compacted = True
             if d.get("isSidechain"):
                 continue
-            msg = d.get("message") or {}
+            msg = d.get("message")
+            msg = msg if isinstance(msg, dict) else {}
             content = msg.get("content")
             p = phase(ts)
             if d.get("type") == "assistant" and isinstance(content, list):
@@ -200,7 +209,7 @@ def main() -> int:
                     continue
                 by_phase["user prompts"][p] += 1
                 if len(text) <= 120:
-                    c["repeated prompts"][redact(text.lower())] += 1
+                    c["repeated prompts"][redact(text).lower()] += 1
         if pending_wake is not None:
             wake_noop["noop"] += 1
         compacted += session_compacted

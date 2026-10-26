@@ -10,9 +10,10 @@
 
 Pick the first route that works. Close what you opened when you are done.
 
-Start dev servers and Expo in the background, and wait on their log for the ready line
-with the harness's background-wait or monitor tool, or read the log once. Never a
-`sleep` loop.
+Start dev servers and Expo in the background, and block until their log shows the ready
+line (the local URL, or the bundle finishing), with the harness's background-wait or
+monitor tool. A single read can come before the line appears; if it is not there, wait
+again rather than continuing. Never a `sleep` loop.
 
 ## Web: browser-use
 
@@ -28,7 +29,7 @@ second call. `browser-use --doctor` diagnoses a daemon that will not connect.
 
 ```bash
 browser-use <<'PY'
-new_tab("http://localhost:5173/settings")
+new_tab(URL)  # the URL from the dev-server log plus the route under test
 wait_for_load()
 for name, w, h, mobile in [("phone", 375, 812, True), ("desktop", 1440, 900, False)]:
     cdp("Emulation.setDeviceMetricsOverride", width=w, height=h, deviceScaleFactor=2, mobile=mobile)
@@ -40,9 +41,10 @@ cdp("Emulation.setEmulatedMedia", features=[])
 PY
 ```
 
-3. Read the screenshots. Reach the state under test (open the dialog, hover, focus,
-   load an empty list) with the accessibility tree and `click_at_xy`, as the
-   `browser-use` skill describes, before capturing.
+3. Read the screenshots. Reach the state under test before capturing: `click_at_xy` for
+   clicks, opening, and focus; for hover, move the pointer without clicking,
+   `cdp("Input.dispatchMouseEvent", type="mouseMoved", x=x, y=y)`. Find the element's
+   coordinates through the accessibility tree, as the `browser-use` skill describes.
 4. Clear the overrides, close the tab you opened, and stop the dev server.
 
 Screenshots are in device pixels; coordinates for clicks are CSS pixels.
@@ -96,11 +98,15 @@ state, rather than spending rounds on automation.
 
 ## Outside T3 Code
 
-- **iOS Simulator:** `xcrun simctl list devices booted`, start the app with
-  `npx expo start --ios`, then `xcrun simctl io booted screenshot /tmp/ui-check.png`
+- **iOS Simulator:** pick a device from `xcrun simctl list devices available`, then
+  `xcrun simctl boot <udid>` (already booted is fine) and
+  `xcrun simctl bootstatus <udid> -b` to wait until it is ready. Start the app with
+  `npx expo start --ios`, then `xcrun simctl io <udid> screenshot /tmp/ui-check.png`
   and read the image.
-- **Android Emulator:** `adb devices`, start the app with `npx expo start --android`,
-  then `adb exec-out screencap -p > /tmp/ui-check.png`.
+- **Android Emulator:** pick the serial from `adb devices` (start one with
+  `emulator -avd <name>` if none is listed), then `adb -s <serial> wait-for-device`.
+  Start the app with `npx expo start --android`, then
+  `adb -s <serial> exec-out screencap -p > /tmp/ui-check.png`.
 - **Web:** browser-use, as above, works in any harness. Without it, use the repo's
   Playwright or Cypress setup. Take screenshots at a phone and a desktop width.
 - **Nothing available:** say so, and give the user the exact screen, viewport, and

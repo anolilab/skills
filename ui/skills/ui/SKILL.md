@@ -52,8 +52,9 @@ problem is structural: replace the separate values with one shared token. If you
 adjusting a value by eye and the second try missed, stop and render two or three
 labelled candidates side by side, and let the user pick.
 
-If the fix needs three or more components, or reveals that the design direction is
-wrong rather than one element, stop and treat it as [Build](#build).
+If the fix needs three or more components, widen the bounds from step 2 to cover them,
+state the new bounds to the user, and continue in this path. Only when the product has
+no style that could govern the fix does it become [Build](#build).
 
 ## Add
 
