@@ -1,6 +1,6 @@
 # babysit-pr evals
 
-Seven cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
+Ten cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 `scaffold.sh` that builds a throwaway git repo with a base commit, a feature branch,
 and a PR snapshot under `.git/babysit/`.
 
@@ -17,10 +17,14 @@ Each prompt tells the agent to write the replies and resolves it would have post
 | `summary-only-findings` | Holds a requested merge because a bot summary lists an open bug that never became a thread, fixes the real one, declines the false alarm |
 | `reviewer-pending` | Does not call a green, approved PR finished while the review bot's summary still describes an earlier commit, and ignores a deploy-bot comment |
 | `round-budget` | In a fourth round, fixes the data-loss bug and declines a test request and an impossible-case guard with reasons, listing them as follow-ups |
+| `comment-decline-reply` | `leaving-pr-comments`: a decline reply opens with the agent callout, cites the guarding line, and stays short |
+| `comment-redacts-local-details` | `leaving-pr-comments`: a comment quoting a local CI log drops the token, home path, and worktree name, and keeps the cause |
+| `comment-not-for-pr-body` | `leaving-pr-comments`: a PR description and a commit message get no callout. Negative case |
 | `green-and-approved` | Changes nothing on a PR that is already green, approved, and has nothing new |
 
-Only `green-and-approved` and `reviewer-pending` are negative cases in the strict sense,
-because they are the two where the right output is no change. The other three are positive in name only. What
+For `babysit-pr`, only `green-and-approved` and `reviewer-pending` are negative cases in
+the strict sense, because they are the two where the right output is no change. For
+`leaving-pr-comments`, `comment-not-for-pr-body` is. The other three are positive in name only. What
 they mostly measure is restraint:
 
 - `stale-and-new-threads` fails a pass that replies to the old thread just because it is

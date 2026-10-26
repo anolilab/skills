@@ -131,7 +131,8 @@ base and `git rebase --onto` it, so the merged commits do not replay.
 
 ## Reply, then resolve
 
-For every thread you acted on, reply before resolving:
+For every thread you acted on, reply before resolving. Format and post each reply with
+the `leaving-pr-comments` skill:
 
 - A fix gets a one-line reply that names the commit that made it.
 - A decline gets the reason, with a file and line reference, then the thread is
