@@ -317,9 +317,12 @@ For drag, swipe, sheets, and sliders:
 ## Responsive and native
 
 - Check 320px wide and 200% browser zoom with nothing clipped or unreachable, a common
-  phone, a tablet when supported, a desktop width, and landscape. Content that pushes
-  back is part of the check: 100-character names, emoji, CJK text, a thousand rows, and
-  an empty list.
+  phone, a tablet when supported, a desktop width, a 1920px screen, and landscape.
+  Content that pushes back is part of the check: 100-character names, emoji, CJK text,
+  a thousand rows, and an empty list.
+- On a wide screen, the content column has a `max-width` and is centred: the margins
+  grow, and line length and grid columns stay as they were at desktop width. Tables,
+  editors, maps, and canvases that use the width on purpose may fill it.
 - Most "too wide on one side" bugs come from the track, not the element: grid columns
   use `minmax(0, 1fr)` instead of a bare `1fr`, flex and grid children that hold text
   get `min-width: 0`, the page root uses `overflow-x: clip` rather than `hidden`, and

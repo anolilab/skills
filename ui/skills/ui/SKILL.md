@@ -153,8 +153,9 @@ that request. Say so in one line ("I'll check it in the browser"), then do it. H
 depends on the harness and the platform:
 [references/verify.md](references/verify.md).
 
-The check covers the bounds from step 2: the changed state, at 320px, a phone, and a
-desktop width, in light and dark when the app has both, plus the siblings from step 5.
+The check covers the bounds from step 2: the changed state, at 320px, a phone, a
+desktop width, and 1920px for a layout change, in light and dark when the app has both,
+plus the siblings from step 5.
 A change to something interactive also gets a keyboard pass. A change to motion is
 watched slowed down, because a still frame cannot show it. A gesture is performed, not
 screenshotted. A spacing or

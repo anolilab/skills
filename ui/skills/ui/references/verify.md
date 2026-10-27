@@ -49,9 +49,11 @@ PY
 
 Screenshots are in device pixels; coordinates for clicks are CSS pixels.
 
-Add `("narrow", 320, 640, True)` to the sizes for any layout change. A 1280px window at
-200% browser zoom is a 640px CSS viewport: check that width too when text or layout
-moved.
+Add `("narrow", 320, 640, True)` and `("wide", 1920, 1080, False)` to the sizes for any
+layout change. A 1280px window at 200% browser zoom is a 640px CSS viewport: check that
+width too when text or layout moved. At 1920 the content stays capped and centred: the
+side margins grow, while line length and the number of grid columns stay as they were
+at 1440.
 
 ## Interaction, accessibility, and motion
 
