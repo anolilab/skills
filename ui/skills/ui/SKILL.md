@@ -26,7 +26,8 @@ and nothing next to the change should have moved.
 | "What's wrong with this screen?", a review or audit with no change asked for | [Review](#review) |
 
 Whatever the path, the change is not done until it has been seen rendered. See
-[Check it rendered](#check-it-rendered).
+[Check it rendered](#check-it-rendered). Add and Build also get a
+[Second look](#second-look).
 
 ## Fix
 
@@ -167,6 +168,26 @@ checked <N> places, changed <M>, left <K> as they were; untested: <what and why>
 
 If nothing can render here, say so and name the exact screen and state the user should
 look at.
+
+## Second look
+
+After Add or Build, once the render check passes, hand the result to a reviewer that
+did not build it: a subagent, where the harness has one. Give it only the screenshots
+from the check, the changed files, and for Add the sibling it was meant to match.
+Leave out your reasoning, the plan, and why anything is the way it is: the point is a
+reader who sees only the result. Ask it to change nothing and to answer with:
+
+- one first word, `ship` or `fix`;
+- at most five findings, worst first: the element, what is wrong, and the fix. A
+  direction it would not have chosen is not a finding;
+- whether the result could pass for its sibling (Add) or for the stated direction
+  (Build), naming the largest gap;
+- one line on what the fixes must not water down.
+
+On `fix`, apply the findings that hold up in one batch and check them rendered once;
+that check comes on top of the render check's own rounds. Do not send it back for
+another review. Without a subagent, skip this and put "no
+second look" in the `untested` part of the final line.
 
 ## Hand off
 
