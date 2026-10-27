@@ -154,6 +154,11 @@ that request. Say so in one line ("I'll check it in the browser"), then do it. H
 depends on the harness and the platform:
 [references/verify.md](references/verify.md).
 
+Budget the checking: one batched pass over every size, scheme, and state in the bounds,
+one batch of fixes for what it found, and at most one confirming pass. If the confirming
+pass still shows a problem, stop and report it in the hand-off rather than starting
+another round.
+
 The check covers the bounds from step 2: the changed state, at 320px, a phone, a
 desktop width, and 1920px for a layout change, in light and dark when the app has both,
 plus the siblings from step 5.
