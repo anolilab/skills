@@ -201,6 +201,10 @@ system package), the library is the vocabulary:
   and keep colour and opacity cues. Never show a state change by motion alone; leave a
   colour, icon, or label. Honour `prefers-reduced-transparency` and
   `prefers-contrast: more` by making translucent surfaces solid with a visible border.
+- Under reduced motion, autoplaying video, animated images, and auto-advancing
+  carousels hold still on their first frame (a `poster`, or a static image) until the
+  user plays them. Anything that moves on its own for more than five seconds has a
+  visible pause control in every mode.
 - Prefer CSS transitions or the Web Animations API for fixed animations; main-thread
   animation stutters while the page is busy. Work inside the animation library the
   repo already uses; do not migrate or mix libraries.
@@ -257,6 +261,11 @@ For drag, swipe, sheets, and sliders:
   like it.
 - A failure in one region shows in that region and leaves the rest of the screen
   working.
+- Every region that loads data has four states: loading, empty, error, and filled.
+  Build all four, not only the filled one. The empty state names what belongs there and
+  offers the one action that fills it; the error says what failed and what to do next.
+- Deleting a whole account or workspace asks the user to type its name before the
+  button enables. Any other irreversible delete keeps a plain confirmation.
 
 ## Forms
 
@@ -310,6 +319,13 @@ For drag, swipe, sheets, and sliders:
   ones are announced (`aria-live`). A disabled submit button says why. A toast is never
   the only place important information appears.
 - Controls that expand or collapse expose `aria-expanded`.
+- A clickable card is one real link: the heading's `<a>`, stretched over the card with
+  an `::after` at `inset: 0`, not a click handler on a `div`. A screen reader then hears
+  one link named by the heading. Other buttons inside the card sit above the stretched
+  link with `position: relative; z-index: 1`.
+- Text over a photo, video, or gradient meets the contrast minimum against the
+  lightest (or darkest) part behind it, not the average. Where it falls short, add a
+  scrim or a solid band, and check again at each width, since the crop moves.
 - A destructive action has a confirmation or an undo; see Feedback and loading for
   which.
 - After a route change, focus moves to the new main content.
@@ -340,6 +356,8 @@ For drag, swipe, sheets, and sliders:
 - Branch layout on available width or size class, not on device model. Going from phone
   to tablet usually restructures navigation (a rail or sidebar), and a tablet split into
   a phone-sized window must still work. Do not lock orientation to avoid a layout bug.
+- In a new app, a sidebar is earned by more than about seven top-level destinations;
+  fewer fit a top bar. In an existing app, its shell decides.
 - Mobile web: set `viewport-fit=cover` and pad with `env(safe-area-inset-*)` (with a
   `max()` fallback), or fixed footers sit under the home indicator.
 - On native, check the smallest and largest supported phones, the safe areas, the
