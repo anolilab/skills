@@ -3,6 +3,7 @@
 ## Contents
 
 - Web: browser-use
+- Layout and structure checks
 - Interaction, accessibility, and motion
 - In T3 Code: iOS and Android
 - Outside T3 Code
@@ -53,14 +54,68 @@ Add `("narrow", 320, 640, True)` to the sizes for any layout change. A 1280px wi
 200% browser zoom is a 640px CSS viewport: check that width too when text or layout
 moved.
 
+## Layout and structure checks
+
+[`scripts/probe.js`](../scripts/probe.js) finds what a screenshot hides or a quick look
+misses. Prepend it to each `js` call (`<skill-dir>` is the folder holding SKILL.md), so a
+navigation never leaves it missing:
+
+```bash
+browser-use <<'PY'
+import json
+probe = open("<skill-dir>/scripts/probe.js").read()
+new_tab(URL)
+wait_for_load()
+for w, h, mobile in [(320, 640, True), (375, 812, True), (1440, 900, False)]:
+    cdp("Emulation.setDeviceMetricsOverride", width=w, height=h, deviceScaleFactor=2, mobile=mobile)
+    print(json.dumps(js(probe + "uiProbe.layout()"), indent=1))
+cdp("Emulation.clearDeviceMetricsOverride")
+PY
+```
+
+`uiProbe.layout()` scrolls the page one screen at a time (or, in an app shell that keeps
+the window still, its largest scrolling region, named in `scrolled`) and reports: the
+page scrolling sideways (with the widest elements), text running past the viewport edge,
+text painted under another element (fixed and sticky bars excepted), control and nav
+labels that wrap, text cut off by its own box with no ellipsis, images that failed to
+load, and two bars that stick at the same `top` and slide under each other. Elements
+that scroll sideways on purpose, such as a carousel, are not reported. A finding is a
+lead: confirm it on the screenshot before acting on it, and fix the ones inside the
+bounds. A mobile size that reports a viewport wider than asked means the content forced
+the page to zoom out, which is itself the defect. `partial: true` means a long page ran
+out of time; the screens it reached are still valid.
+
+**What must survive the change.** Before editing, on the same route, viewport, and
+data, save `js(probe + "uiProbe.inventory()")` to `/tmp/ui-inventory-before.json`. After
+the change, take it again and compare:
+
+```python
+before, after = json.load(open("/tmp/ui-inventory-before.json")), js(probe + "uiProbe.inventory()")
+for group in ("required", "soft"):
+    print(group, "missing:", sorted(set(before[group]) - set(after[group])))
+```
+
+`required` lists links by `href`, forms, fields by `name` or `id` and type, test hooks
+(`data-testid`, `data-test`, `data-cy`), and inline `on*` handlers. Anything missing
+from it is a regression: restore it, or name it in the hand-off with the reason. `soft`
+lists anchor ids, headings, and images with their alt text; a missing one is reported,
+not restored, when the change meant it. Handlers attached by React, Vue, or another
+framework are not in the DOM, so a click handler that moved is not caught here; check
+those by using the control.
+
 ## Interaction, accessibility, and motion
 
 Screenshots prove layout, nothing else. For the rest, in the same browser-use tab:
 
 - **Keyboard:** press Tab through the changed flow
   (`cdp("Input.dispatchKeyEvent", type="keyDown", key="Tab")` and `keyUp`), and after
-  each step read `js("document.activeElement.outerHTML.slice(0, 200)")` and take a
-  screenshot. Focus must be visible and never hidden under a sticky bar.
+  each step read `js(probe + "uiProbe.focus()")` and take a screenshot. Call
+  `js(probe + "uiProbe.rest()")` once before the first Tab: `focus()` then reports what
+  has focus, whether it looks any different from unfocused (`indicator`), and a fixed or
+  sticky bar covering it (`hiddenUnder`). Focus must be visible and never hidden under
+  a sticky bar. `indicator` compares the element, its `::before` and `::after`, and its
+  parent, so `true` proves only that something changed and `false` is a lead to check
+  on the screenshot; judge the ring's contrast against what is behind it there.
 - **Names and roles:** read `cdp("Accessibility.getFullAXTree")["nodes"]`, filtered to
   the changed area, for missing names on buttons, a dialog without a title, and heading
   order.
