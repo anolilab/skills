@@ -41,6 +41,9 @@ Whatever the path, the change is not done until it has been seen rendered. See
      on them), analytics event names, `data-testid` and other selectors tests use, nav
      labels, legal or consent copy, and existing focus order, alt text, and contrast;
    - *proof*: the render that will show the fix, and the measurement it will report.
+     On the web, also record the page's inventory of links, fields, and test hooks
+     before editing, to compare after
+     ([references/verify.md](references/verify.md#layout-and-structure-checks)).
 3. **Find the code that draws it.** Start from the route or screen, and follow it
    through the components and variants to the token or style that produces the value.
    Do not guess where styles live, and do not start with a repo-wide search for things
@@ -159,14 +162,15 @@ one batch of fixes for what it found, and at most one confirming pass. If the co
 pass still shows a problem, stop and report it in the hand-off rather than starting
 another round.
 
-The check covers the bounds from step 2: the changed state, at 320px, a phone, a
-desktop width, and 1920px for a layout change, in light and dark when the app has both,
-plus the siblings from step 5.
-A change to something interactive also gets a keyboard pass. A change to motion is
-watched slowed down, because a still frame cannot show it. A gesture is performed, not
-screenshotted. A spacing or
-alignment fix reports numbers: the element's measured box before and after, and the
-viewport width. Finish with one line:
+The check covers the bounds from step 2: the changed state, at 320px, a phone, a desktop
+width, and 1920px for a layout change, in light and dark when the app has both, plus the
+siblings from step 5. On the web, run the layout probe at each width and compare the
+inventory with the one taken before. A change to something interactive also gets a
+keyboard pass. A change to motion is watched slowed down, because a still frame cannot
+show it. A gesture is performed, not screenshotted. A spacing or alignment fix reports
+numbers: the element's measured box before and after, and the viewport width.
+
+Finish with one line:
 
 ```
 checked <N> places, changed <M>, left <K> as they were; untested: <what and why>
