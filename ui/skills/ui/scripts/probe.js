@@ -50,9 +50,11 @@
 
   const pinned = (el) => [...ancestors(el)].some((node) => ["fixed", "sticky"].includes(getComputedStyle(node).position));
 
+  // Only a region the user can scroll counts; a clipping wrapper hides content, so it
+  // must not suppress the report.
   const scrollsSideways = (el) => [...ancestors(el.parentElement)].some((node) => {
     if (node === document.documentElement || node === document.body) return false;
-    return ["auto", "scroll", "hidden", "clip"].includes(getComputedStyle(node).overflowX);
+    return ["auto", "scroll"].includes(getComputedStyle(node).overflowX);
   });
 
   // Something only counts as covering text when it paints at that point.
@@ -101,12 +103,13 @@
       if (outer.bottom <= 0 || outer.top >= innerHeight) continue;
       for (const box of textBoxes(el)) {
         if (box.bottom <= 0 || box.top >= innerHeight) continue;
-        if (box.right > width + 1 && !scrollsSideways(el) && !pinned(el)) {
-          findings.add(`text runs past the right edge of the viewport by ${Math.round(box.right - width)}px: ${name(el)}`);
-          break;
-        }
+        // Text cut off by a clipping wrapper is the wrapper's finding, not the viewport's.
         const seen = visiblePart(el, box);
         if (!seen) continue;
+        if (seen.right > width + 1 && !scrollsSideways(el) && !pinned(el)) {
+          findings.add(`text runs past the right edge of the viewport by ${Math.round(seen.right - width)}px: ${name(el)}`);
+          break;
+        }
         const x = (Math.max(seen.left, 0) + Math.min(seen.right, width)) / 2;
         const y = (Math.max(seen.top, 0) + Math.min(seen.bottom, innerHeight)) / 2;
         if (x <= 0 || x >= width || y <= 0 || y >= innerHeight) continue;
@@ -157,12 +160,14 @@
       if (lines > 1) findings.add(`label wraps onto ${lines} lines: ${name(el)}`);
     }
 
-    for (const el of texts) {
+    // Any clipping box, including a wrapper whose text sits in child elements.
+    for (const el of document.body.querySelectorAll("*")) {
       const style = getComputedStyle(el);
       const cut = ["hidden", "clip"].includes(style.overflowX) || ["hidden", "clip"].includes(style.overflowY);
+      if (!cut || !shown(el)) continue;
       const clamped = style.textOverflow === "ellipsis" || (style.webkitLineClamp && style.webkitLineClamp !== "none");
-      if (cut && !clamped && (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1)) {
-        findings.add(`text is cut off by its own box, with no ellipsis or way to the rest: ${name(el)}`);
+      if (!clamped && (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1) && el.textContent.trim()) {
+        findings.add(`content is cut off by its own box, with no ellipsis or way to the rest: ${name(el)}`);
       }
     }
 
@@ -190,13 +195,15 @@
 
   // The window, or in an app shell that keeps the window still, its largest
   // scrolling region.
+  // Compares scroll ranges, not sizes: a few pixels of incidental page overflow must not
+  // outrank a long panel, and ties keep the window.
   const scroller = () => {
     const root = document.scrollingElement || document.documentElement;
-    if (root.scrollHeight > innerHeight + 1) return root;
+    const range = (el) => el.scrollHeight - el.clientHeight;
     const regions = [...document.body.querySelectorAll("*")].filter((el) =>
-      ["auto", "scroll"].includes(getComputedStyle(el).overflowY) && el.scrollHeight > el.clientHeight + 1 && shown(el));
-    const area = (el) => el.clientWidth * el.clientHeight;
-    return regions.sort((a, b) => area(b) - area(a))[0] || root;
+      ["auto", "scroll"].includes(getComputedStyle(el).overflowY) && range(el) > 1 && shown(el));
+    const longest = regions.sort((a, b) => range(b) - range(a))[0];
+    return longest && range(longest) > root.scrollHeight - innerHeight ? longest : root;
   };
 
   async function layout() {
@@ -260,44 +267,61 @@
     if (!el || el === document.body) return { focused: null, note: "focus is on the page body or has left the page" };
     const before = window.__uiProbeRest?.get(el);
     const box = el.getBoundingClientRect();
-    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    // The centre, the edge midpoints and the corners, each just inside the control: a bar
+    // can cover a strip or a corner and leave the centre clear.
+    const inset = 2;
+    const mid = (a, b) => (a + b) / 2;
+    const points = [
+      [mid(box.left, box.right), mid(box.top, box.bottom)],
+      [box.left + inset, mid(box.top, box.bottom)], [box.right - inset, mid(box.top, box.bottom)],
+      [mid(box.left, box.right), box.top + inset], [mid(box.left, box.right), box.bottom - inset],
+      [box.left + inset, box.top + inset], [box.right - inset, box.top + inset],
+      [box.left + inset, box.bottom - inset], [box.right - inset, box.bottom - inset],
+    ];
+    const cover = points
+      .filter(([x, y]) => x > 0 && x < innerWidth && y > 0 && y < innerHeight)
+      .map(([x, y]) => document.elementFromPoint(x, y))
+      .find((hit) => hit && !el.contains(hit) && !hit.contains(el) && pinned(hit));
     return {
       focused: name(el),
       indicator: before === undefined ? "unknown: call uiProbe.rest() before the first Tab" : before !== look(el),
-      hiddenUnder: hit && !el.contains(hit) && !hit.contains(el) && pinned(hit) ? name(hit) : null,
+      hiddenUnder: cover ? name(cover) : null,
       inViewport: box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth,
     };
   }
 
-  // Keyed by attributes that scripts, tests, and autofill read, never by position.
+  // Keyed by attributes that scripts, tests, and autofill read. Entries are kept as a
+  // list, not a set, so two links with one href count twice. A field carries its
+  // position among the named fields, so a reordered form shows as missing entries.
   // Framework handlers live in JavaScript, not the DOM, so only inline on* attributes
   // show up; a moved click handler is not caught here.
   function inventory() {
-    const required = new Set();
-    const soft = new Set();
-    for (const a of document.querySelectorAll("a[href]")) required.add(`link ${a.getAttribute("href")}`);
-    for (const form of document.forms) required.add(`form ${form.getAttribute("action") || ""} ${form.id || form.getAttribute("name") || ""}`.trim());
+    const required = [];
+    const soft = [];
+    for (const a of document.querySelectorAll("a[href]")) required.push(`link ${a.getAttribute("href")}`);
+    for (const form of document.forms) required.push(`form ${form.getAttribute("action") || ""} ${form.id || form.getAttribute("name") || ""}`.trim());
+    let position = 0;
     for (const field of document.querySelectorAll("input, select, textarea, button[name]")) {
       const key = field.getAttribute("name") || field.id;
-      if (key) required.add(`field ${key} ${field.getAttribute("type") || field.tagName.toLowerCase()}`);
+      if (key) required.push(`field ${key} ${field.getAttribute("type") || field.tagName.toLowerCase()} at ${position++}`);
     }
     for (const el of document.querySelectorAll("[data-testid], [data-test], [data-cy]")) {
-      required.add(`test hook ${el.getAttribute("data-testid") || el.getAttribute("data-test") || el.getAttribute("data-cy")}`);
+      required.push(`test hook ${el.getAttribute("data-testid") || el.getAttribute("data-test") || el.getAttribute("data-cy")}`);
     }
     for (const el of document.querySelectorAll("*")) {
       for (const attr of el.getAttributeNames()) {
-        if (attr.startsWith("on")) required.add(`handler ${attr} on ${el.id || el.getAttribute("name") || el.tagName.toLowerCase()}`);
+        if (attr.startsWith("on")) required.push(`handler ${attr} on ${el.id || el.getAttribute("name") || el.tagName.toLowerCase()}`);
       }
     }
     for (const el of document.querySelectorAll("[id]")) {
-      if (!/[:]|^radix-|^headlessui-|^react-aria/.test(el.id)) soft.add(`id ${el.id}`);
+      if (!/[:]|^radix-|^headlessui-|^react-aria/.test(el.id)) soft.push(`id ${el.id}`);
     }
     for (const h of document.querySelectorAll("h1, h2, h3, h4, h5, h6")) {
       const text = h.textContent.trim().replace(/\s+/g, " ");
-      if (text) soft.add(`${h.tagName.toLowerCase()} ${text.slice(0, 80)}`);
+      if (text) soft.push(`${h.tagName.toLowerCase()} ${text.slice(0, 80)}`);
     }
-    for (const img of document.images) soft.add(`image ${img.getAttribute("src") || ""} alt="${img.getAttribute("alt") ?? "(none)"}"`);
-    return { url: location.pathname + location.search, viewport: `${innerWidth}x${innerHeight}`, required: [...required].sort(), soft: [...soft].sort() };
+    for (const img of document.images) soft.push(`image ${img.getAttribute("src") || ""} alt="${img.getAttribute("alt") ?? "(none)"}"`);
+    return { url: location.pathname + location.search, viewport: `${innerWidth}x${innerHeight}`, required: required.sort(), soft: soft.sort() };
   }
 
   window.uiProbe = { layout, rest, focus, inventory };

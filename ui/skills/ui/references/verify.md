@@ -68,7 +68,7 @@ import json
 probe = open("<skill-dir>/scripts/probe.js").read()
 new_tab(URL)
 wait_for_load()
-for w, h, mobile in [(320, 640, True), (375, 812, True), (1440, 900, False)]:
+for w, h, mobile in [(320, 640, True), (375, 812, True), (1440, 900, False), (1920, 1080, False)]:
     cdp("Emulation.setDeviceMetricsOverride", width=w, height=h, deviceScaleFactor=2, mobile=mobile)
     print(json.dumps(js(probe + "uiProbe.layout()"), indent=1))
 cdp("Emulation.clearDeviceMetricsOverride")
@@ -84,24 +84,41 @@ load, and two bars that stick at the same `top` and slide under each other. Elem
 that scroll sideways on purpose, such as a carousel, are not reported. A finding is a
 lead: confirm it on the screenshot before acting on it, and fix the ones inside the
 bounds. A mobile size that reports a viewport wider than asked means the content forced
-the page to zoom out, which is itself the defect. `partial: true` means a long page ran
-out of time; the screens it reached are still valid.
+the page to zoom out, which is itself the defect. `partial: true` means the scan stopped
+before the end of the page: it reached the 3-second limit or 60 screens, whichever came
+first, and can be partial even when it finished in under three seconds. The screens it
+reached are still valid; scan again for the rest.
 
 **What must survive the change.** Before editing, on the same route, viewport, and
-data, save `js(probe + "uiProbe.inventory()")` to `/tmp/ui-inventory-before.json`. After
-the change, take it again and compare:
+data, save the inventory. After the change, take it again on the same route, viewport,
+and data, and print what is missing. Each block is a complete `browser-use` call:
 
-```python
+```bash
+browser-use <<'PY'
+import json
+probe = open("<skill-dir>/scripts/probe.js").read()
+json.dump(js(probe + "uiProbe.inventory()"), open("/tmp/ui-inventory-before.json", "w"))
+PY
+```
+
+```bash
+browser-use <<'PY'
+import json
+from collections import Counter
+probe = open("<skill-dir>/scripts/probe.js").read()
 before, after = json.load(open("/tmp/ui-inventory-before.json")), js(probe + "uiProbe.inventory()")
 for group in ("required", "soft"):
-    print(group, "missing:", sorted(set(before[group]) - set(after[group])))
+    print(group, "missing:", sorted((Counter(before[group]) - Counter(after[group])).elements()))
+PY
 ```
 
 `required` lists links by `href`, forms, fields by `name` or `id` and type, test hooks
 (`data-testid`, `data-test`, `data-cy`), and inline `on*` handlers. Anything missing
-from it is a regression: restore it, or name it in the hand-off with the reason. `soft`
-lists anchor ids, headings, and images with their alt text; a missing one is reported,
-not restored, when the change meant it. Handlers attached by React, Vue, or another
+from it is a regression: restore it, or name it in the hand-off with the reason. Entries
+are counted, so removing one of two links with the same `href` shows up, and a field
+carries its position, so a reordered form shows up as entries missing at their old
+positions. `soft` lists element ids, headings, and images with their alt text; a missing
+one is reported, not restored, when the change meant it. Handlers attached by React, Vue, or another
 framework are not in the DOM, so a click handler that moved is not caught here; check
 those by using the control.
 
@@ -114,8 +131,10 @@ Screenshots prove layout, nothing else. For the rest, in the same browser-use ta
   each step read `js(probe + "uiProbe.focus()")` and take a screenshot. Call
   `js(probe + "uiProbe.rest()")` once before the first Tab: `focus()` then reports what
   has focus, whether it looks any different from unfocused (`indicator`), and a fixed or
-  sticky bar covering it (`hiddenUnder`). Focus must be visible and never hidden under
-  a sticky bar. `indicator` compares the element, its `::before` and `::after`, and its
+  sticky bar covering it (`hiddenUnder`). `hiddenUnder` samples the centre, the edge
+  midpoints and the corners just inside the control, so a bar covering a strip or corner
+  is caught, but a sliver between samples can still be missed. Focus must be visible and
+  never hidden under a sticky bar; the screenshot is the check for full coverage. `indicator` compares the element, its `::before` and `::after`, and its
   parent, so `true` proves only that something changed and `false` is a lead to check
   on the screenshot; judge the ring's contrast against what is behind it there.
 - **Names and roles:** read `cdp("Accessibility.getFullAXTree")["nodes"]`, filtered to

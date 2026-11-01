@@ -38,7 +38,7 @@ Whatever the path, the change is not done until it has been seen rendered. See
    - *keep*: everything outside the named defect that must not change: neighbours,
      content, and behaviour, including what breaks
      unseen: route slugs and anchor ids, form field names and order (autofill depends
-     on them), analytics event names, `data-testid` and other selectors tests use, nav
+     on them; the inventory records each field's position), analytics event names, `data-testid` and other selectors tests use, nav
      labels, legal or consent copy, and existing focus order, alt text, and contrast;
    - *proof*: the render that will show the fix, and the measurement it will report.
      On the web, also record the page's inventory of links, fields, and test hooks
