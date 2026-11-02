@@ -132,22 +132,41 @@ else
     fail "follow-up edit should list only later.ts (rc=$RC err=$ERR)"
 fi
 
-# 12. A stacked branch with no PR is scoped against its parent branch. The parent's own
-# commits are not this branch's work, so they must stay out of scope.
-repo="$(new_repo stacked)"
-git -C "$repo" checkout -q -- file.txt
-git -C "$repo" update-ref refs/remotes/origin/main HEAD
-echo parent >"$repo/parent.ts"
-git -C "$repo" add -A
-git -C "$repo" commit -qm parent
-git -C "$repo" update-ref refs/remotes/origin/parent HEAD
-git -C "$repo" checkout -q -b child
-echo child >"$repo/child.ts"
+# stacked_repo <name>: origin/main at the base commit, origin/parent one commit on it, and
+# a child branch with one uncommitted-then-committed file on top of the parent.
+stacked_repo() {
+    local repo
+    repo="$(new_repo "$1")"
+    git -C "$repo" checkout -q -- file.txt
+    git -C "$repo" update-ref refs/remotes/origin/main HEAD
+    echo parent >"$repo/parent.ts"
+    git -C "$repo" add -A
+    git -C "$repo" commit -qm parent
+    git -C "$repo" update-ref refs/remotes/origin/parent HEAD
+    git -C "$repo" checkout -q -b child
+    echo child >"$repo/child.ts"
+    printf '%s' "$repo"
+}
+
+# 12. A stacked branch with an explicit parent is scoped against that parent. The parent's
+# own commits are not this branch's work, so they must stay out of scope.
+repo="$(stacked_repo stacked)"
+git -C "$repo" config branch.child.deslopBase parent
 run_hook "$repo" false
 if [ "$RC" -eq 2 ] && printf '%s' "$ERR" | grep -q 'child.ts' && ! printf '%s' "$ERR" | grep -q 'parent.ts'; then
-    pass "stacked branch with no PR lists only its own files, against its parent"
+    pass "stacked branch with deslopBase lists only its own files, against its parent"
 else
-    fail "stacked branch should list only child.ts (rc=$RC err=$ERR)"
+    fail "stacked branch with deslopBase should list only child.ts (rc=$RC err=$ERR)"
+fi
+
+# 13. Without an explicit parent, a stacked branch falls back to the default branch. That
+# reviews the parent's commits too, which is wider than needed but never skips work.
+repo="$(stacked_repo stacked-fallback)"
+run_hook "$repo" false
+if [ "$RC" -eq 2 ] && printf '%s' "$ERR" | grep -q 'child.ts' && printf '%s' "$ERR" | grep -q 'parent.ts'; then
+    pass "stacked branch without deslopBase falls back to the default branch"
+else
+    fail "stacked branch without deslopBase should fall back to origin/main (rc=$RC err=$ERR)"
 fi
 
 if [ "$failures" -gt 0 ]; then
