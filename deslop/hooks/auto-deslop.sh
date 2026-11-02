@@ -45,12 +45,18 @@ hash_stdin() {
   fi
 }
 
-# Base branch the work merges into. Same order as the deslop skill: the open PR's
-# base, then origin's default branch, then main. A successful PR lookup is cached
-# per branch. A failed one is not, so a branch that gets a PR later is picked up.
+# Base branch the work merges into, in order: an explicit per-branch setting, the open PR's
+# base, origin's default branch, then main. Set the setting for a stacked branch with
+# `git config branch.<name>.deslopBase <parent-branch>`. Git cannot tell a parent from any
+# other ancestor, so the hook does not guess one. Without the setting or a PR, it falls
+# back to the default branch, which may review more than the branch's own work but never
+# skips committed changes. A successful PR lookup is cached per branch. A failed one is
+# not, so a branch that gets a PR later is picked up.
 resolve_base() {
   local branch cache base
   branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || echo detached)
+  base=$(git config --get "branch.$branch.deslopBase" 2>/dev/null || true)
+  if [ -n "$base" ]; then printf '%s' "$base"; return; fi
   cache="$GIT_DIR/deslop-base-${branch//\//_}"
   if [ -s "$cache" ]; then cat "$cache"; return; fi
   if command -v gh >/dev/null 2>&1; then
