@@ -45,9 +45,27 @@ hash_stdin() {
   fi
 }
 
-# Base branch the work merges into. Same order as the deslop skill: the open PR's
-# base, then origin's default branch, then main. A successful PR lookup is cached
-# per branch. A failed one is not, so a branch that gets a PR later is picked up.
+# The remote branch this one was cut from: the nearest remote branch whose tip is already
+# in HEAD. A stacked branch carries its parent's commits, so measuring against the default
+# branch would put the parent's whole diff into scope. The parent is the closer ancestor,
+# so it has the fewest commits between it and HEAD.
+nearest_merged_base() {
+  local self cand n best="" bestn=""
+  self=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)
+  while IFS= read -r cand; do
+    cand=${cand#"${cand%%[![:space:]]*}"}
+    case "$cand" in "" | *"->"* | origin/HEAD) continue ;; esac
+    [ -n "$self" ] && [ "$cand" = "origin/$self" ] && continue
+    n=$(git rev-list --count "$cand..HEAD" 2>/dev/null) || continue
+    if [ -z "$bestn" ] || [ "$n" -lt "$bestn" ]; then best=$cand; bestn=$n; fi
+  done < <(git branch -r --merged HEAD 2>/dev/null)
+  printf '%s' "${best#origin/}"
+}
+
+# Base branch the work merges into: the open PR's base, then the nearest remote branch
+# this one was cut from (a stacked branch before its PR exists), then origin's default
+# branch, then main. A successful PR lookup is cached per branch. A failed one is not,
+# so a branch that gets a PR later is picked up.
 resolve_base() {
   local branch cache base
   branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || echo detached)
@@ -61,6 +79,8 @@ resolve_base() {
       return
     fi
   fi
+  base=$(nearest_merged_base)
+  if [ -n "$base" ]; then printf '%s' "$base"; return; fi
   base=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
   base=${base#origin/}
   printf '%s' "${base:-main}"
