@@ -133,7 +133,7 @@ else
 fi
 
 # stacked_repo <name>: origin/main at the base commit, origin/parent one commit on it, and
-# a child branch with one uncommitted-then-committed file on top of the parent.
+# a child branch checked out on top of the parent with an uncommitted child.ts.
 stacked_repo() {
     local repo
     repo="$(new_repo "$1")"
