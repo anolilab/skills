@@ -1,6 +1,6 @@
 {
   "name": "ui",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Builds and fixes web and React Native or Expo interfaces in the product's own style, from a complaint or a screenshot, and checks the result rendered in a browser or simulator before handing off.",
   "license": "MIT",
