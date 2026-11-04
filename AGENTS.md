@@ -17,6 +17,8 @@ on whatever else lives here.
 <plugin-name>/
 ├── .claude-plugin/
 │   └── plugin.json      # declares ./skills/ and ./hooks/hooks.json
+├── package.json         # private, release metadata only; never published
+├── CHANGELOG.md         # written by the release
 ├── hooks/               # optional
 │   ├── hooks.json
 │   └── *.sh             # executable
@@ -37,8 +39,9 @@ A skill directory holds `SKILL.md`, its references, and any scripts the skill ru
 The `npx` installer copies the whole skill directory and nothing above it, which is
 why hooks and evals sit at the plugin level instead.
 
-**A new plugin needs a `marketplace.json` entry.** A new skill inside an existing
-plugin does not, because `plugin.json` points at the whole `skills/` directory.
+**A new plugin needs a `marketplace.json` entry**, a `package.json`, and a line in
+`pnpm-workspace.yaml`. A new skill inside an existing plugin needs none of these,
+because `plugin.json` points at the whole `skills/` directory.
 
 Group skills into one plugin when they share hooks or are always wanted together.
 Split them when someone would reasonably want one and not the other.
@@ -162,18 +165,17 @@ Three other workflows run alongside it, all calling the shared definitions in
 `anolilab/workflows`: a Conventional Commits check on the pull request title,
 `zizmor` over these workflow files, and an OSSF scorecard.
 
-The org's `dependency-review` workflow is deliberately **not** here. This repo has
-no dependency manifest, so the check has nothing to read, and it fails outright
-until Dependency graph is switched on in the repository settings. Add it back in
-the same commit that introduces the first `package.json` or `pyproject.toml`, and
-turn the setting on at the same time.
+The org's `dependency-review` workflow checks the release tooling's dependencies on
+every pull request. It needs Dependency graph switched on in the repository settings.
 
 What the validator enforces, so you do not have to remember it: frontmatter limits and
 the name matching its directory, the 500-line skill body, references linked from
 `SKILL.md` and existing, a `## Contents` heading on references over 100 lines, no
 em or en dashes outside code fences, at least three eval cases each with a prompt,
-graders carrying `## Passes` and `## Fails`, an executable `scaffold.sh`, and
-manifest fields that Claude Code would otherwise ignore in silence.
+graders carrying `## Passes` and `## Fails`, an executable `scaffold.sh`, a
+`package.json` whose name and version match `plugin.json`, a `pnpm-workspace.yaml`
+entry for every plugin, and manifest fields that Claude Code would otherwise ignore
+in silence.
 
 Pinning in CI is deliberate. Actions are pinned to commit SHAs because tags can be
 retargeted, and the npm tools to exact versions so a new release cannot change the
@@ -198,8 +200,11 @@ Use this order. The rules themselves are in the sections above, so read the ones
 match your change before you write.
 
 1. **Place the change.** A new skill goes in an existing plugin's `skills/` directory.
-   A new plugin needs a directory at the repo root, a `.claude-plugin/plugin.json`, and
-   an entry in `.claude-plugin/marketplace.json`. See Layout.
+   A new plugin needs a directory at the repo root, a `.claude-plugin/plugin.json`, a
+   `package.json` copied from a sibling plugin, an entry in
+   `.claude-plugin/marketplace.json`, and a line in `pnpm-workspace.yaml`. Start it at
+   version `0.1.0`; the first `feat` or `fix` that merges releases it. See Layout and
+   Releases.
 2. **Write the skill.** Keep `SKILL.md` under 500 lines. Move long material into
    `references/` and link it directly from `SKILL.md`. See Adding a skill.
 3. **Write at least three eval cases**, one of them negative. Each case needs a
@@ -231,6 +236,32 @@ match your change before you write.
 Gotchas: the validator rejects em and en dashes outside code fences, so write the word
 instead. `claude plugin eval` may not be enabled on the account. If it isn't, report the
 cases as unrun rather than passed.
+
+</important>
+
+<important if="you are changing a plugin version, package.json, CHANGELOG.md, or the release workflow">
+
+## Releases
+
+Claude Code caches an installed plugin by the `version` in its `plugin.json` and
+only fetches it again when that string changes. A merged change that leaves the
+version alone never reaches anyone who already installed the plugin.
+
+So versions are not edited by hand. `.github/workflows/semantic-release.yml` runs
+multi-semantic-release on every push to `main`. For each plugin directory that
+received a `feat`, `fix`, `perf`, or breaking commit since its last
+`<plugin>@<version>` tag, it writes the next version into `package.json` and
+`.claude-plugin/plugin.json` (through `scripts/release/set-plugin-version.mjs`),
+adds a `CHANGELOG.md` entry, commits that back as `chore(release): ...`, tags it, and
+creates a GitHub release. The shared config is
+`scripts/release/plugin.releaserc.json`. Nothing goes to npm, and every
+`package.json` is private.
+
+This is why the scope in a pull request title matters: the type decides the bump
+(`feat` is minor, `fix` and `perf` are patch, `!` is major), and only commits that
+touch a plugin's directory count for that plugin. A `docs`, `test`, `ci`, or `chore`
+change releases nothing. Put `[skip release]` in the merge commit to hold a release
+back.
 
 </important>
 

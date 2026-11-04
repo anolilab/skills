@@ -276,6 +276,23 @@ def check_plugin(entry: dict, marketplace_path: Path) -> None:
             f"marketplace entry '{name}'"
         )
 
+    # The release reads the version from package.json and writes it to both files.
+    # Claude Code reads only plugin.json, so a plugin missing from the release, or
+    # a version edited by hand in one file, is a plugin users never get updates for.
+    package_path = plugin_dir / "package.json"
+    package = read_json(package_path)
+    if package is not None:
+        if package.get("name") != name:
+            problem(f"{rel(package_path)}: name '{package.get('name')}' does not match the plugin '{name}'")
+        if package.get("version") != manifest.get("version"):
+            problem(
+                f"{rel(package_path)}: version '{package.get('version')}' does not match "
+                f"{rel(manifest_path)} version '{manifest.get('version')}'"
+            )
+    workspace = read_text(ROOT / "pnpm-workspace.yaml")
+    if workspace is not None and f'- "{source.removeprefix("./")}"' not in workspace:
+        problem(f"pnpm-workspace.yaml: does not list '{source.removeprefix('./')}', so it is never released")
+
     # A misplaced field is silently ignored at load time, which is worse than an error.
     if "category" in manifest:
         problem(f"{rel(manifest_path)}: category belongs in the marketplace entry, not plugin.json")

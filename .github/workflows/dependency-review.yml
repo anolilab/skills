@@ -1,0 +1,19 @@
+name: "Dependency review"
+
+on: # yamllint disable-line rule:truthy
+    pull_request:
+        branches:
+            - "main"
+
+permissions: {}
+
+concurrency:
+    group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
+    cancel-in-progress: true
+
+jobs:
+    dependency-review:
+        permissions:
+            contents: "read"
+            pull-requests: "write"
+        uses: "anolilab/workflows/.github/workflows/dependency-review.yml@e0bf8c3215311c2f9f74daceea7c292e4dc520d7" # v26.0.5
