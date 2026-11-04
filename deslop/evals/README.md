@@ -1,6 +1,6 @@
 # deslop evals
 
-Eleven cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
+Twelve cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 `scaffold.sh` that builds a throwaway git repo with a base commit and a dirty branch.
 
 | Case | What it checks |
@@ -16,8 +16,9 @@ Eleven cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 | `shortcut-marker` | Removes two slop comments, keeps a `shortcut:` debt marker word for word |
 | `ponytail-marker` | Removes two slop comments, keeps a `ponytail:` debt marker word for word |
 | `keep-list` | Removes a restating comment, keeps the one the user already restored and recorded |
+| `markup-slop` | Cleans a Nuxt component's template labels, auto-imported imports, and long-form utilities, keeps an accessibility comment |
 
-Nine of the eleven are positive cases in name only. What they actually measure is
+Nine of the twelve are positive cases in name only. What they actually measure is
 restraint:
 
 - `clean-diff` fails any pass that finds something to remove.
@@ -36,7 +37,7 @@ restraint:
 - `go-error-idiom` fails a pass that reads Go through TypeScript eyes and strips the
   repeated `if err != nil`. It is the only case in a language other than TypeScript,
   and the only one where an entry in the catalog inverts rather than applies.
-- The keep-half of `comment-slop`, `defensive-boundary`, and `type-evasion` catches
+- The keep-half of `comment-slop`, `defensive-boundary`, `type-evasion`, and `markup-slop` catches
   over-deletion in the same way.
 
 Over-eagerness is how this kind of skill goes wrong, so most of the suite is pointed
