@@ -3,7 +3,7 @@
   "name": "babysit-pr",
   "displayName": "Babysit PR",
   "description": "Takes an open pull request you wrote through review and CI rounds: fixes the findings that are real, answers and resolves the ones that are not, pushes, and stops at green and approved or at a stop point you set. Marks every comment it posts as agent-written, and reports where every PR stands on request.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Anolilab",
     "url": "https://github.com/anolilab"
