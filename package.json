@@ -4,7 +4,7 @@
   "description": "Release tooling for the plugins in this repository. Nothing here is published to npm.",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@11.28.2",
+  "packageManager": "pnpm@11.28.10",
   "engines": {
     "node": ">=24.10.0"
   },
