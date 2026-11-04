@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "naming-changes",
+  "displayName": "Naming Changes",
+  "description": "Names a change the way the repository already names them: branch name, commit message, and PR title, checked against its commitlint config, PR title workflow, release tooling, and history rather than invented.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Anolilab",
+    "url": "https://github.com/anolilab"
+  },
+  "homepage": "https://github.com/anolilab/skills/tree/main/naming-changes",
+  "repository": "https://github.com/anolilab/skills",
+  "license": "MIT",
+  "keywords": ["commit", "conventional-commits", "branch", "pull-request", "commitlint"],
+  "skills": "./skills/"
+}

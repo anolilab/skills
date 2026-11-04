@@ -41,6 +41,13 @@
       "description": "Audits a coding agent's setup and its recent session transcripts, and reports each problem with evidence and a pasteable fix. Report-only.",
       "category": "developer-tools",
       "license": "MIT"
+    },
+    {
+      "name": "naming-changes",
+      "source": "./naming-changes",
+      "description": "Names a change the way the repository already does: branch name, commit message, and PR title, with type and scope checked against its commitlint config, PR title check, release tooling, and history.",
+      "category": "developer-tools",
+      "license": "MIT"
     }
   ]
 }
