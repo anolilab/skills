@@ -2,7 +2,8 @@
 # A Nuxt app with auto-imports on, whose existing components write `size-*` and
 # semantic colour tokens. The change adds a component that labels its markup,
 # imports what Nuxt supplies, and spells utilities the long way. One template
-# comment records an accessibility reason and must survive.
+# comment records an accessibility reason and must survive. The raw green matches
+# the default `success` token in both themes, so the swap renders the same.
 set -euo pipefail
 
 git init -q .
@@ -54,7 +55,7 @@ const title = computed(() => `Deploy ${props.name}`);
     </header>
     <!-- Kept as a button, not a div: keyboard users need it in the tab order -->
     <button type="button" class="text-sm" @click="expanded = !expanded">Details</button>
-    <p v-if="expanded" :class="props.succeeded ? 'text-green-600 dark:text-green-400' : 'text-error'">
+    <p v-if="expanded" :class="props.succeeded ? 'text-green-500 dark:text-green-400' : 'text-error'">
       {{ props.succeeded ? "Succeeded" : "Failed" }}
     </p>
   </div>

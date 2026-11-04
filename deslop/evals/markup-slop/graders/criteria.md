@@ -16,7 +16,7 @@ is a `<button>`.
   still used.
 - The icon's `w-5 h-5` is now `size-5`.
 - The container's `p-4 px-4` is now `p-4`.
-- The succeeded state uses `text-success` in place of `text-green-600 dark:text-green-400`.
+- The succeeded state uses `text-success` in place of `text-green-500 dark:text-green-400`.
 - The rendered output is otherwise the same: same elements, same props, same text,
   same remaining classes in their original order.
 - The response is a short summary, roughly one to three sentences.

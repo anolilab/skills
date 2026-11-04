@@ -616,22 +616,29 @@ order, not on the attribute.
 a codebase that writes `size-10`, `px-4 py-4` where siblings write `p-4`. Only when
 the repo already shows the short form; `size-*` does not exist before Tailwind 3.4.
 
-**Arbitrary values that duplicate a scale step**: `w-[16px]` for `w-4`, `text-[14px]`
-for `text-sm`, `#3b82f6` for the theme's `blue-500`.
+**Arbitrary values that duplicate a scale step**: `w-[16px]` for `w-4`, `#3b82f6` for
+the theme's `blue-500`. Compare every property the utility sets, not just the one in the
+brackets: `text-sm` sets a line height as well as the size, so it does not replace
+`text-[14px]` unless the line height already matches.
 
 **Raw palette colours where the design system has semantic tokens.** `text-green-600
 dark:text-green-400` in a project whose components write `text-success`, or a
 `class="bg-red-500"` on a component that takes `color="error"`. Read two sibling
-components to find the token before replacing anything.
+components to find the token, and replace only when it resolves to the same colour in
+every theme the project ships. When it does not, the swap changes what renders: report
+it instead.
 
-**Importance and inline styles as a way out**: a `!` modifier or `!important`, or an
-inline `style` attribute, in a codebase that styles through classes.
+**Importance and inline styles as a way out**: a `!` modifier or `!important`, or a
+static inline `style` attribute, in a codebase that styles through classes.
 
 **Framework imports the framework already supplies.** `import { ref, computed } from
-"vue"` in a Nuxt project that relies on auto-imports, `import React from "react"` in a
-project on the automatic JSX runtime.
+"vue"` in a Nuxt project that relies on auto-imports, or `import React from "react"`
+in a project on the automatic JSX runtime when nothing but JSX used it. A `React.`
+reference anywhere else in the file, such as `React.useState`, still needs the import.
 
-**CSS the diff added and nothing uses**: a selector no template references, a
+**CSS the diff added and nothing uses**: a selector no template references and no
+framework or script adds at runtime (Vue Router's `router-link-active`, a class set
+from code, a third-party widget's markup), a
 declaration repeated in the same rule, a vendor prefix the build's autoprefixer
 already adds.
 
@@ -645,6 +652,8 @@ already adds.
   spec.
 - Explicit imports in a project that turned auto-imports off. Check the config.
 - `!important` overriding third-party CSS the project cannot otherwise reach.
+- An inline `style` bound to a runtime value, such as a dragged element's position or
+  a progress width, that no class can express.
 
 ---
 
