@@ -1,6 +1,6 @@
 {
   "name": "agent-health",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Audits a coding agent's setup and its recent session transcripts: instructions, settings, hooks, memory, skills, and the errors, blocked commands, and loops they produce. Report-only, with a pasteable fix for every finding.",
   "license": "MIT",
