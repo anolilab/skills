@@ -3,7 +3,7 @@
   "name": "deslop",
   "displayName": "Deslop",
   "description": "Removes AI-generated slop from a branch's changes without altering behaviour: narrating comments, needless defensive code, casts that dodge the type system, single-use abstractions, and over-mocked tests.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Anolilab",
     "url": "https://github.com/anolilab"
