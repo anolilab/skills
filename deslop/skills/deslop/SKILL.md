@@ -3,12 +3,12 @@ name: deslop
 description: >
   Removes AI-generated slop from a branch's changes: narrating comments, needless
   defensive code, `any` and other casts that silence the type checker, single-use
-  wrappers, mock-heavy tests, anything foreign to the file's own style. Works in any
-  language, with per-language tells for TypeScript, Python, Go, Rust, Shell, and SQL.
-  Use proactively once a batch of code edits is finished and before review or commit,
-  and whenever the user says deslop,
-  desloppify, or anti-slop. Not for bug hunting, security review, or refactoring;
-  behaviour stays identical.
+  wrappers, mock-heavy tests, template comments and inconsistent Tailwind classes,
+  anything foreign to the file's own style. Works in any language, with per-language
+  tells for TypeScript, Python, Go, Rust, Shell, and SQL. Use proactively once a batch
+  of code edits is finished and before review or commit, and whenever the user says
+  deslop, desloppify, anti-slop, remove useless comments, or trim unused imports. Not
+  for bug hunting, security review, or refactoring; behaviour stays identical.
 ---
 
 # Deslop
@@ -51,7 +51,7 @@ The corollaries that decide most calls:
   them can be this file's own habit. Look for corroboration before cutting: a function
   carrying a narrating comment *and* a guard for an impossible case *and* a cast that
   hides the type has three independent witnesses against it. This threshold governs
-  the style calls, catalog entries 1 through 7. It does not govern what the catalog
+  the style calls, catalog entries 1 through 7 and 10. It does not govern what the catalog
   marks as a defect rather than a style call, where nobody chose the thing and one
   sighting is enough.
 - **A clean diff comes back unchanged.** Finding nothing is a normal outcome on a
@@ -122,6 +122,7 @@ classify every added line against the catalog in
 | Test slop | Mocked-out seams, assertions on the mock, tautological tests |
 | Prose slop | Marketing-voice docs, emoji headers, unrequested README and changelog edits |
 | Structural slop | Files, configs, or dependencies added outside the project's layout |
+| Markup and styling slop | Template section labels, conflicting utilities, raw colours over tokens |
 
 Read the catalog for the "not slop" side of each. Several of these have legitimate
 forms that you must leave alone.

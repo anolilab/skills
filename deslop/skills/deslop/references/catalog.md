@@ -5,8 +5,9 @@ falls between the two, the tiebreaker is always the surrounding file: match it.
 
 The examples are illustrative, not a scope limit. Entries 1 through 9 describe shapes
 that occur in any language, and each one is shown in whichever language spells that
-shape most plainly. Read entry 10 for the tells specific to the language in front of
-you, and read it knowing that a few of them *invert* an entry above rather than adding
+shape most plainly. Entry 10 covers templates, stylesheets, and utility classes, which
+the code-shaped entries do not reach. Read entry 11 for the tells specific to the
+language in front of you, and read it knowing that a few of them *invert* an entry above rather than adding
 to it: Go's repeated `if err != nil` is idiom, not defensive slop.
 
 Most entries here are **style calls**, and a style call needs corroboration before you
@@ -31,7 +32,8 @@ to it. This holds for every entry, not just the ones where it is obvious.
 7. Test slop: over-mocking, assertions on the mock, tautologies, bloated fixtures
 8. Prose slop: marketing voice, emoji headers, unrequested README and changelog edits
 9. Structural slop: misplaced files, unneeded configs and dependencies
-10. Language notes: TypeScript/JavaScript, Python, Go, Rust, Shell, SQL
+10. Markup and styling slop: template comments, conflicting utilities, raw colours, framework imports
+11. Language notes: TypeScript/JavaScript, Python, Go, Rust, Shell, SQL
 
 ---
 
@@ -86,6 +88,19 @@ def get_user_by_id(user_id: str) -> User:
 (`// TODO: add tests`, `// TODO: handle edge cases`).
 
 **Type information in a comment** where the type is already declared.
+
+**A reason buried in narration.** A paragraph whose one useful sentence is a
+constraint. Do not keep it whole and do not delete it: cut it to that sentence.
+
+```ts
+// This function processes the queue. We loop over each job and handle it.
+// Jobs must run in insertion order because refunds depend on the charge
+// that precedes them. Finally we return the processed count.
+```
+
+becomes `// Jobs run in insertion order: a refund depends on the charge before it.`
+
+Section labels in markup are entry 10.
 
 ### Not slop
 
@@ -439,6 +454,11 @@ loads.
 
 **Commented-out code.** Version control already has it.
 
+**Placeholder code**: an empty handler wired to a control (`onClick={() => {}}`), a
+branch whose body is only a TODO, a prop or emit declared and never read. The
+interface promises behaviour that does not exist. A defect rather than a style call:
+remove it, or report it when removing it would change a public contract.
+
 **A hand-rolled copy of a helper the repo already has**, or of a standard-library
 function, written inside the diff. A style call: it needs the repo to actually contain
 the helper, and you should find it by searching, not by memory. Swap in the existing one
@@ -568,7 +588,67 @@ Anything the task genuinely required, and anything the project's layout document
 
 ---
 
-## 10. Language notes
+## 10. Markup and styling slop
+
+Templates, JSX, stylesheets, and utility classes. The linter rarely sees any of it, and
+the repo's existing components are the only reference. Class order is the formatter's
+job when the repo runs one (`prettier-plugin-tailwindcss` and the like): leave it.
+
+### Slop
+
+**Section labels in markup.** The element already says what it is.
+
+```vue
+<!-- Header section -->
+<header class="flex items-center">
+```
+
+```tsx
+{/* Submit button */}
+<Button type="submit">Save</Button>
+```
+
+**Duplicate or conflicting utilities on one element**: `flex flex`, `p-4 px-4`,
+`text-sm text-base`. One of them is dead, and which one wins depends on stylesheet
+order, not on the attribute.
+
+**Spelling a utility the long way where the repo uses the short one**: `w-10 h-10` in
+a codebase that writes `size-10`, `px-4 py-4` where siblings write `p-4`. Only when
+the repo already shows the short form; `size-*` does not exist before Tailwind 3.4.
+
+**Arbitrary values that duplicate a scale step**: `w-[16px]` for `w-4`, `text-[14px]`
+for `text-sm`, `#3b82f6` for the theme's `blue-500`.
+
+**Raw palette colours where the design system has semantic tokens.** `text-green-600
+dark:text-green-400` in a project whose components write `text-success`, or a
+`class="bg-red-500"` on a component that takes `color="error"`. Read two sibling
+components to find the token before replacing anything.
+
+**Importance and inline styles as a way out**: a `!` modifier or `!important`, or an
+inline `style` attribute, in a codebase that styles through classes.
+
+**Framework imports the framework already supplies.** `import { ref, computed } from
+"vue"` in a Nuxt project that relies on auto-imports, `import React from "react"` in a
+project on the automatic JSX runtime.
+
+**CSS the diff added and nothing uses**: a selector no template references, a
+declaration repeated in the same rule, a vendor prefix the build's autoprefixer
+already adds.
+
+### Not slop
+
+- A markup comment that records a layout constraint, an accessibility reason, or a
+  browser workaround: `<!-- Kept as a table: screen readers announce the row headers -->`.
+- A raw colour where the design system has no matching token, such as a chart series or
+  a brand asset.
+- An arbitrary value that is genuinely off the scale, like a fixed header height from a
+  spec.
+- Explicit imports in a project that turned auto-imports off. Check the config.
+- `!important` overriding third-party CSS the project cannot otherwise reach.
+
+---
+
+## 11. Language notes
 
 **TypeScript / JavaScript**: the type-evasion section is where most of it lives. Also
 watch for `Promise` chains in an `async`/`await` codebase, `require` in ESM, default
