@@ -1,0 +1,6 @@
+packages:
+  - "deslop"
+  - "babysit-pr"
+  - "teardown"
+  - "ui"
+  - "agent-health"

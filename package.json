@@ -1,0 +1,29 @@
+{
+  "name": "anolilab-skills",
+  "private": true,
+  "description": "Release tooling for the plugins in this repository. Nothing here is published to npm.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@11.28.2",
+  "engines": {
+    "node": ">=24.10.0"
+  },
+  "scripts": {
+    "release": "multi-semantic-release"
+  },
+  "devDependencies": {
+    "@anolilab/multi-semantic-release": "4.6.3",
+    "@semantic-release/changelog": "7.0.0",
+    "@semantic-release/commit-analyzer": "13.0.1",
+    "@semantic-release/exec": "7.1.0",
+    "@semantic-release/git": "11.0.1",
+    "@semantic-release/github": "12.0.10",
+    "@semantic-release/release-notes-generator": "14.1.1",
+    "@visulima/yaml": "2.0.0",
+    "conventional-changelog-conventionalcommits": "9.3.1",
+    "semantic-release": "25.0.9"
+  },
+  "multi-release": {
+    "ignorePrivate": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "deslop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Removes AI-generated slop from a branch's changes without altering behaviour: narrating comments, needless defensive code, casts that dodge the type system, single-use abstractions, and over-mocked tests.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anolilab/skills.git",
+    "directory": "deslop"
+  },
+  "release": {
+    "extends": "../scripts/release/plugin.releaserc.json"
+  }
+}

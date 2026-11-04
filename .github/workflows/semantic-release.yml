@@ -1,0 +1,84 @@
+name: "Semantic Release"
+
+# Releases each plugin whose directory received a feat, fix, perf, or breaking
+# commit since its last `<plugin>@<version>` tag. The release writes the new
+# version into the plugin's package.json and .claude-plugin/plugin.json, adds a
+# CHANGELOG.md entry, commits that back to main, tags it, and creates a GitHub
+# release. Claude Code caches a plugin by its plugin.json version, so this is
+# what lets installed plugins update. Nothing is published to npm.
+on: # yamllint disable-line rule:truthy
+    push:
+        branches:
+            - "main"
+    workflow_dispatch: # yamllint disable-line rule:empty-values
+
+concurrency:
+    group: "${{ github.workflow }}-${{ github.ref }}"
+    # Never cancel a running release: a cancel mid-run can leave a tag without
+    # its release commit. A newer push queues instead.
+    cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+    semantic-release:
+        name: "Semantic Release"
+        # The release commit carries `[skip ci]`; `[skip release]` lets a push opt out.
+        if: "github.repository == 'anolilab/skills' && !contains(github.event.head_commit.message, '[skip release]')"
+        runs-on: "ubuntu-latest"
+        timeout-minutes: 30
+        permissions:
+            contents: "write" # to push the release commit and tags, and create GitHub releases
+            issues: "write" # used by @semantic-release/github
+            pull-requests: "write" # used by @semantic-release/github
+            checks: "read" # to wait for the other checks on this commit
+
+        steps:
+            - name: "Harden Runner"
+              uses: "step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43" # v2.22.3
+              with:
+                  egress-policy: "audit"
+
+            - name: "Wait for checks to succeed"
+              uses: "lewagon/wait-on-check-action@369769072fe522a3a8a85c03c96af1e5242a1994" # v1.9.1
+              timeout-minutes: 20
+              with:
+                  ref: "${{ github.sha }}"
+                  repo-token: "${{ secrets.GITHUB_TOKEN }}"
+                  wait-interval: 30 # seconds
+                  running-workflow-name: "Semantic Release"
+                  allowed-conclusions: "success,skipped"
+
+            # No persisted credentials: `pnpm install` must not find the release
+            # token in .git/config. The release step passes it to git itself.
+            - name: "Git checkout"
+              uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+
+            - name: "Setup resources and environment"
+              uses: "anolilab/workflows/step/node@1f3a7f7e561f7690fe19dea5d2ed225def53c908" # v26.0.6
+              with:
+                  node-version: "24"
+                  cache-prefix: "semantic-release"
+
+            - name: "Semantic Release"
+              env:
+                  GITHUB_TOKEN: "${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN }}"
+                  GIT_AUTHOR_NAME: "github-actions-shell"
+                  GIT_AUTHOR_EMAIL: "github-actions[bot]@users.noreply.github.com"
+                  GIT_COMMITTER_NAME: "github-actions-shell"
+                  GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
+              shell: "bash"
+              # multi-semantic-release hands @semantic-release/git the plain
+              # repository URL, so its push needs git-level credentials. They go in
+              # as env-only git config for this step and never reach .git/config.
+              run: |
+                  set -euo pipefail
+                  auth="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+                  echo "::add-mask::${auth}"
+                  export GIT_CONFIG_COUNT=1
+                  export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
+                  export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${auth}"
+                  pnpm exec multi-semantic-release
