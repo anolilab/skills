@@ -41,6 +41,13 @@
       "description": "Audits a coding agent's setup and its recent session transcripts, and reports each problem with evidence and a pasteable fix. Report-only.",
       "category": "developer-tools",
       "license": "MIT"
+    },
+    {
+      "name": "writing-articles",
+      "source": "./writing-articles",
+      "description": "Researches, writes, and reviews blog articles that answer one reader question, with dated sources, the author's own experience, one call to action, and correctly labelled affiliate links.",
+      "category": "productivity",
+      "license": "MIT"
     }
   ]
 }

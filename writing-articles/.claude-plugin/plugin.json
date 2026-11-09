@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "writing-articles",
+  "displayName": "Writing Articles",
+  "description": "Researches, writes, and reviews blog articles that answer one reader question, with dated sources, the author's own experience, one call to action, and correctly labelled affiliate links.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Anolilab",
+    "url": "https://github.com/anolilab"
+  },
+  "homepage": "https://github.com/anolilab/skills/tree/main/writing-articles",
+  "repository": "https://github.com/anolilab/skills",
+  "license": "MIT",
+  "keywords": ["blog", "articles", "seo", "content", "affiliate"],
+  "skills": "./skills/"
+}

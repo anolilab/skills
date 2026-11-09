@@ -57,6 +57,7 @@ rather than into the current project.
 | `teardown` | [`teardown`](teardown/skills/teardown/) | Compares another project against yours and returns a ranked, evidence-backed list of what it has that you lack, checked against your code first. Builds nothing until you pick items. |
 | `ui` | [`ui`](ui/skills/ui/) | Builds and fixes web and React Native or Expo interfaces in the product's own style, from a complaint or a screenshot, and checks the result rendered in a browser or simulator. |
 | `agent-health` | [`agent-health`](agent-health/skills/agent-health/) | Audits your agent setup and recent session transcripts (instructions, settings, hooks, memory, skills, repeated errors, blocked commands, review loops) and reports each problem with evidence and a pasteable fix. Report-only. |
+| `writing-articles` | [`writing-articles`](writing-articles/skills/writing-articles/) | Researches, writes, and reviews blog articles that answer one reader question: answer first, dated and verified sources, the author's own experience marked for them to fill in instead of invented, one call to action, and affiliate links labelled for the market. Reads a per-project context file for voice, format, and components. |
 
 ## Why these skills
 
