@@ -205,6 +205,8 @@ importers:
 
   teardown: {}
 
+  thermos: {}
+
   ui: {}
 
 packages:

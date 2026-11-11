@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "thermos",
+  "displayName": "Thermos",
+  "description": "Runs a thermo-nuclear review of a branch: one Opus pass for bugs, breakage, security and feature-gate leaks, one for maintainability, judged against the base, then one checked report.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Anolilab",
+    "url": "https://github.com/anolilab"
+  },
+  "homepage": "https://github.com/anolilab/skills/tree/main/thermos",
+  "repository": "https://github.com/anolilab/skills",
+  "license": "MIT",
+  "keywords": ["review", "code-quality", "security", "thermo-nuclear"],
+  "skills": "./skills/"
+}

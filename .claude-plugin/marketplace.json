@@ -36,6 +36,13 @@
       "license": "MIT"
     },
     {
+      "name": "thermos",
+      "source": "./thermos",
+      "description": "Runs a thermo-nuclear review of a branch: one Opus pass for bugs, breakage and security, one for maintainability, then one checked, deduplicated report. Edits nothing.",
+      "category": "developer-tools",
+      "license": "MIT"
+    },
+    {
       "name": "agent-health",
       "source": "./agent-health",
       "description": "Audits a coding agent's setup and its recent session transcripts, and reports each problem with evidence and a pasteable fix. Report-only.",
