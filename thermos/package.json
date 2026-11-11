@@ -1,6 +1,6 @@
 {
   "name": "thermos",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Runs a thermo-nuclear review of a branch: one Opus pass for bugs, breakage, security and feature-gate leaks, one for maintainability, judged against the base, then one checked report.",
   "license": "MIT",
