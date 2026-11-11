@@ -40,6 +40,10 @@ a safeguard, or dropping a deprecated API, and the change is small and self-cont
 report it as a defect. Report it only when the author seems unaware of the consequences, when
 the scope is larger than the stated intent, or when the change looks malicious.
 
+The exemption never covers security. When a removed authorization check, input check or
+secret guard leaves some access unsafe, report it, however deliberate and small the change is.
+Judge the resulting security contract, not the author's intent.
+
 ## Calibration
 
 Severity is a claim, so earn it. Use:

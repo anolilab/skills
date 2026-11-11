@@ -15,20 +15,44 @@ This skill reads and reports. It edits no file, posts nothing to the PR and fixe
 
 ## 1. Resolve the scope
 
-Pick the base. Use the PR's base branch if the current branch has an open PR
-(`gh pr view --json baseRefName --jq .baseRefName 2>/dev/null`). If `gh` is missing, not
-logged in, or the branch has no open PR, that command prints nothing: treat it as no PR, skip
-step 7, and go on to the next source. Otherwise use the remote's default branch
-(`git symbolic-ref --short refs/remotes/origin/HEAD`, without the `origin/` prefix). The user
-can name a base; that wins.
-
-When a remote exists, fetch the base and compare against `origin/<base>`. When there is no
-remote, use the local branch of that name. Then resolve the merge base and fail fast if
-either step is empty:
+Work from the repository root, so the relative paths in later commands resolve:
 
 ```bash
-git fetch --quiet origin "<base>" 2>/dev/null || true   # skipped when there is no remote
-base=origin/<base>                                      # the local name when there is no remote
+cd "$(git rev-parse --show-toplevel)"
+```
+
+Pick the base, in this order:
+
+1. **A base the user named** wins over everything else.
+2. **The PR's target**, when the current branch has an open PR. The target repository is the
+   one in the PR URL, not `origin`, which can be a fork. Run this block only when `$ref` is
+   non-empty; if `gh` is missing, not logged in, or there is no open PR, both commands print
+   nothing, so go on to step 3 and skip step 7.
+
+   ```bash
+   ref=$(gh pr view --json baseRefName --jq .baseRefName 2>/dev/null)
+   url=$(gh pr view --json url --jq .url 2>/dev/null)
+   repo=$(printf '%s' "$url" | sed -E 's#https://github.com/([^/]+/[^/]+)/pull/.*#https://github.com/\1.git#')
+   git fetch --quiet "$repo" "$ref" || { echo "fetch of the PR base failed; stop and report"; exit 1; }
+   base=FETCH_HEAD
+   ```
+
+3. **The remote's default branch**, when the repository has a remote. Read its name with
+   `git symbolic-ref --short refs/remotes/origin/HEAD` and drop the `origin/` prefix. Fetch it
+   and stop on failure. Never fall back to a cached `origin/<base>` ref, because changes merged
+   into the real base would then show up as branch changes. If the default cannot be
+   resolved, ask the user for the base.
+
+   ```bash
+   git fetch --quiet origin "<base>" || { echo "fetch failed; stop and ask for a base"; exit 1; }
+   base=FETCH_HEAD
+   ```
+
+4. **No remote at all:** use the local branch `main`, or the one the user named.
+
+Then resolve the merge base and fail fast if it does not resolve:
+
+```bash
 git rev-parse --verify --quiet "$base" >/dev/null || { echo "base does not resolve"; exit 1; }
 mb=$(git merge-base "$base" HEAD)
 git diff --stat "$mb" && git ls-files --others --exclude-standard
@@ -38,15 +62,25 @@ Diff the working tree against `$mb`, not `$base...HEAD`. That covers committed, 
 unstaged changes. It does not cover untracked files, which the second command lists. If the
 stat is empty and no untracked file exists, stop and say there is nothing to review.
 
-Record the changed file list: `git diff --name-only "$mb"` plus the untracked files.
+Record the changed files with NUL-delimited output, so names with spaces or non-ASCII
+characters come through intact, and with rename detection on:
+
+```bash
+git diff -z --name-status -M "$mb"
+git ls-files -z --others --exclude-standard
+```
+
+For a renamed file, keep both paths: the old one (the base's name, for the base line count)
+and the new one (the working tree's name).
 
 ## 2. Measure file size against the base
 
-For each changed file, compare its line count at the base with its count now:
+For each changed file, compare its line count at the base with its count now. For a rename,
+read the base count from the old path:
 
 ```bash
-git show "$mb:$f" 2>/dev/null | wc -l   # 0 for a new file
-wc -l < "$f"
+git show "$mb:$oldpath" 2>/dev/null | wc -l   # 0 for a new file
+wc -l < "$newpath"
 ```
 
 Note every file that moves from 1000 lines or fewer to more than 1000. A file that was
@@ -89,7 +123,10 @@ Each reviewer returns a list, nothing else. Each finding has:
 - severity: `blocker`, `high`, `medium`, `low` or `suggestion`;
 - `file:line` for the code it is about;
 - one sentence stating the defect;
-- a trigger and a consequence, with concrete inputs and the wrong output;
+- evidence that matches the pass. A bug finding gives a trigger, meaning the concrete inputs
+  that reach the defect, and the wrong output or effect they produce. A quality finding gives
+  the triggering change and the structural consequence that follows from it, plus the move
+  that fixes it;
 - confidence: `confirmed` when it traced the path to the end, `plausible` when it could not.
 
 No summary, no praise, no padding. An empty list is a valid answer. Ideas that improve
