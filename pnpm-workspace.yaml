@@ -2,5 +2,6 @@ packages:
   - "deslop"
   - "babysit-pr"
   - "teardown"
+  - "thermos"
   - "ui"
   - "agent-health"

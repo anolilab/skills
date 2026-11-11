@@ -55,6 +55,7 @@ rather than into the current project.
 | | [`leaving-pr-comments`](babysit-pr/skills/leaving-pr-comments/) | Formats every GitHub comment an agent posts for you: marks it as agent-written, keeps it short and checkable, strips secrets and local paths, and posts it without quoting damage. |
 | | [`pr-state`](babysit-pr/skills/pr-state/) | Answers "state?" with one table of the PRs in play: required checks, open threads and bot findings, review decision, mergeability, and the decisions waiting on you. Read-only. |
 | `teardown` | [`teardown`](teardown/skills/teardown/) | Compares another project against yours and returns a ranked, evidence-backed list of what it has that you lack, checked against your code first. Builds nothing until you pick items. |
+| `thermos` | [`thermos`](thermos/skills/thermos/) | Runs a thermo-nuclear review of a branch: one Opus pass for bugs, breakage, security and feature-gate leaks, one for maintainability and file size, each checked against the code, merged into one report. Edits nothing. |
 | `ui` | [`ui`](ui/skills/ui/) | Builds and fixes web and React Native or Expo interfaces in the product's own style, from a complaint or a screenshot, and checks the result rendered in a browser or simulator. |
 | `agent-health` | [`agent-health`](agent-health/skills/agent-health/) | Audits your agent setup and recent session transcripts (instructions, settings, hooks, memory, skills, repeated errors, blocked commands, review loops) and reports each problem with evidence and a pasteable fix. Report-only. |
 
@@ -128,6 +129,7 @@ brings the `deslop` hook, which the `npx` route does not.
 /plugin install deslop@anolilab
 /plugin install babysit-pr@anolilab
 /plugin install teardown@anolilab
+/plugin install thermos@anolilab
 /plugin install ui@anolilab
 /plugin install agent-health@anolilab
 ```
