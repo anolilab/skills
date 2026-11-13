@@ -1,0 +1,15 @@
+{
+  "name": "writing-articles",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Researches, writes, and reviews blog articles that answer one reader question, with dated sources, the author's own experience, one call to action, and correctly labelled affiliate links.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anolilab/skills.git",
+    "directory": "writing-articles"
+  },
+  "release": {
+    "extends": "../scripts/release/plugin.releaserc.json"
+  }
+}

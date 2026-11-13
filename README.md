@@ -58,6 +58,7 @@ rather than into the current project.
 | `thermos` | [`thermos`](thermos/skills/thermos/) | Runs a thermo-nuclear review of a branch: one Opus pass for bugs, breakage, security and feature-gate leaks, one for maintainability and file size, each checked against the code, merged into one report. Edits nothing. |
 | `ui` | [`ui`](ui/skills/ui/) | Builds and fixes web and React Native or Expo interfaces in the product's own style, from a complaint or a screenshot, and checks the result rendered in a browser or simulator. |
 | `agent-health` | [`agent-health`](agent-health/skills/agent-health/) | Audits your agent setup and recent session transcripts (instructions, settings, hooks, memory, skills, repeated errors, blocked commands, review loops) and reports each problem with evidence and a pasteable fix. Report-only. |
+| `writing-articles` | [`writing-articles`](writing-articles/skills/writing-articles/) | Researches, writes, and reviews blog articles that answer one reader question: answer first, dated and verified sources, the author's own experience marked for them to fill in instead of invented, one call to action, and affiliate links labelled for the market. Reads a per-project context file for voice, format, and components. |
 
 ## Why these skills
 
