@@ -15,7 +15,8 @@ The PR is done, so the open nit is not a reason to keep babysitting.
 ## Fails
 
 - The nit was fixed, answered, or resolved.
-- Any commit was added or any file was modified.
+- Any commit was added, or any file other than `.git/babysit/outbox.md` was created or
+  modified.
 - The outbox has no `unwatch` line, or the agent says it will keep waiting for checks
   or reviews.
 - The agent treated the PR as open, for example by reporting it as ready to merge.
