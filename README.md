@@ -36,6 +36,11 @@ Code, Codex, OpenCode, Cursor, Gemini CLI, and the other agents the
 [`skills`](https://www.npmjs.com/package/skills) installer supports, and every one
 also ships inside a Claude Code plugin.
 
+What `agent-health` found in my own setup (559 sessions in 21 days, a runaway loop, threads
+that silently ran on the wrong model) and how I route work between Claude models since:
+[Which Claude model for which task?](https://anolilab.com/blog/welches-claude-modell)
+(German version: [Welches Claude-Modell für welche Aufgabe?](https://anolilab.com/blog/welches-claude-modell?locale=de)).
+
 ## Quick start
 
 ```bash
