@@ -1,6 +1,6 @@
 # babysit-pr evals
 
-Thirteen cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
+Fourteen cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 `scaffold.sh` that builds a throwaway git repo with a base commit, a feature branch,
 and a PR snapshot under `.git/babysit/`.
 
@@ -24,9 +24,10 @@ Each prompt tells the agent to write the replies and resolves it would have post
 | `pr-state-reviewer-stale` | `pr-state`: a green, approved PR whose review bot has not read the head is blocked |
 | `pr-state-thread-paging` | `pr-state`: finds the one unresolved thread on the second page of 101 |
 | `green-and-approved` | Changes nothing on a PR that is already green, approved, and has nothing new |
+| `merged-pr-stops` | On a wake for a PR that is already merged, stops the watcher and leaves a post-merge bot nit alone. Negative case |
 
-For `babysit-pr`, only `green-and-approved` and `reviewer-pending` are negative cases in
-the strict sense, because they are the two where the right output is no change. For
+For `babysit-pr`, only `green-and-approved`, `merged-pr-stops`, and `reviewer-pending` are negative cases in
+the strict sense, because they are the three where the right output is no change. For
 `leaving-pr-comments`, `comment-not-for-pr-body` is, and for `pr-state`, `pr-state-ready-no-merge`. The other three are positive in name only. What
 they mostly measure is restraint:
 
