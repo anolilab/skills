@@ -110,8 +110,10 @@ changed functions, and to stay read-only: no edits, no commits, no PR comments.
 ## 4. Launch both reviewers
 
 Send both `Agent` calls in one message, each with `subagent_type: "general-purpose"`,
-`model: "opus"` and `run_in_background: false`. The harness runs subagents in the background
-unless told otherwise, and synthesis needs both results, so the flag must be set explicitly.
+`model: "opus"`, `effort: "high"` and `run_in_background: false`. The harness runs subagents in
+the background unless told otherwise, and synthesis needs both results, so the flag must be
+set explicitly. Set the effort explicitly too: without it, a reviewer runs at the model's
+default effort, which on the current Opus is `medium`, below what a review needs.
 Give each reviewer the brief from step 3, and nothing else.
 
 If the user asked for one pass (`bugs` or `quality`), launch only that reviewer.
