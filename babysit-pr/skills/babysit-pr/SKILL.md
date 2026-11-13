@@ -209,6 +209,11 @@ last check and the merge. An admin merge needs the user's explicit word for that
 
 Stop before the finish line when:
 
+- **The PR is merged or closed**, by you, by someone else, or by a stacked parent's
+  merge that retargeted and closed it. Check the PR's `state` first on every wake. Stop
+  the watcher in that same turn, before anything else, and report. Nothing is left to
+  babysit, and a watcher left running keeps waking the thread for every later bot
+  comment.
 - **The user set a stop point.** Phrases such as "stop after the first set of review
   comments" or "I'll handle the rest" mean that round is the last one. Finish that
   round, push it, and report. Do not start another, even if checks are still red.
