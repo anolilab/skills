@@ -1,3 +1,9 @@
+## babysit-pr [0.2.1](https://github.com/anolilab/skills/compare/babysit-pr@0.2.0...babysit-pr@0.2.1) (2026-11-13)
+
+### Bug Fixes
+
+* **babysit-pr:** stop the watcher once the PR is merged or closed ([#53](https://github.com/anolilab/skills/issues/53)) ([1013c57](https://github.com/anolilab/skills/commit/1013c57fabc063de242581a85831310afae56cd1))
+
 ## babysit-pr [0.2.0](https://github.com/anolilab/skills/compare/babysit-pr@0.1.0...babysit-pr@0.2.0) (2026-11-04)
 
 ### Features
