@@ -17,8 +17,8 @@ should only run for threads you have decided to act on.
 ## Head commit and its time
 
 ```bash
-gh pr view <number> --json headRefName,headRefOid,mergeable,mergeStateStatus,reviewDecision,commits \
-  --jq '{head: .headRefOid, branch: .headRefName, mergeable, mergeStateStatus, reviewDecision, lastCommit: .commits[-1].committedDate}'
+gh pr view <number> --json state,headRefName,headRefOid,mergeable,mergeStateStatus,reviewDecision,commits \
+  --jq '{state, head: .headRefOid, branch: .headRefName, mergeable, mergeStateStatus, reviewDecision, lastCommit: .commits[-1].committedDate}'
 ```
 
 `reviewDecision` is `APPROVED`, `CHANGES_REQUESTED`, `REVIEW_REQUIRED`, or empty when
