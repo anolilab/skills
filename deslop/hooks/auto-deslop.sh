@@ -185,6 +185,15 @@ if [ "$COUNT" -eq 0 ]; then
   exit 0
 fi
 
+# A small follow-up after a pass waits until DESLOP_MIN_FILES code files have changed
+# since that pass. The state is not recorded, so the skipped edits stay in scope and are
+# reviewed together once the count is reached. The first pass on a branch always runs.
+MIN_FILES=${DESLOP_MIN_FILES:-1}
+case "$MIN_FILES" in '' | *[!0-9]*) MIN_FILES=1 ;; esac
+if [ "$SINCE_PASS" = true ] && [ "$COUNT" -lt "$MIN_FILES" ]; then
+  exit 0
+fi
+
 record_state
 
 if [ "$SINCE_PASS" = true ]; then

@@ -132,6 +132,38 @@ else
     fail "follow-up edit should list only later.ts (rc=$RC err=$ERR)"
 fi
 
+# 11b. With DESLOP_MIN_FILES set, a follow-up below the count waits, and the skipped
+# edits stay in scope until the count is reached.
+repo="$(new_repo minfiles)"
+run_hook "$repo" false DESLOP_MIN_FILES=2
+run_hook "$repo" true DESLOP_MIN_FILES=2
+echo x >"$repo/small.ts"
+run_hook "$repo" false DESLOP_MIN_FILES=2
+[ "$RC" -eq 0 ] && [ -z "$ERR" ] && pass "follow-up below DESLOP_MIN_FILES does not block" \
+    || fail "follow-up below DESLOP_MIN_FILES should exit 0 silently (rc=$RC err=$ERR)"
+echo x >"$repo/second.ts"
+run_hook "$repo" false DESLOP_MIN_FILES=2
+if [ "$RC" -eq 2 ] && printf '%s' "$ERR" | grep -q 'small.ts' && printf '%s' "$ERR" | grep -q 'second.ts'; then
+    pass "reaching DESLOP_MIN_FILES blocks and keeps the earlier skipped file in scope"
+else
+    fail "reaching DESLOP_MIN_FILES should list small.ts and second.ts (rc=$RC err=$ERR)"
+fi
+
+# 11c. The first pass on a branch is never skipped, whatever the count.
+repo="$(new_repo minfiles-first)"
+run_hook "$repo" false DESLOP_MIN_FILES=5
+[ "$RC" -eq 2 ] && pass "first pass blocks even below DESLOP_MIN_FILES" \
+    || fail "first pass should block regardless of DESLOP_MIN_FILES (rc=$RC)"
+
+# 11d. A value that is not a number falls back to the default of 1.
+repo="$(new_repo minfiles-bad)"
+run_hook "$repo" false
+run_hook "$repo" true
+echo x >"$repo/later.ts"
+run_hook "$repo" false DESLOP_MIN_FILES=abc
+[ "$RC" -eq 2 ] && pass "non-numeric DESLOP_MIN_FILES falls back to 1" \
+    || fail "non-numeric DESLOP_MIN_FILES should behave as 1 (rc=$RC)"
+
 # stacked_repo <name>: origin/main at the base commit, origin/parent one commit on it, and
 # a child branch checked out on top of the parent with an uncommitted child.ts.
 stacked_repo() {

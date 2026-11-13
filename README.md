@@ -152,6 +152,14 @@ To turn it off without uninstalling:
 export DESLOP_AUTO=0
 ```
 
+To stop one-file follow-up edits from each costing a pass, set a minimum number of code
+files changed since the last pass. Smaller follow-ups wait and are reviewed together once
+the count is reached. The first pass on a branch always runs. The default is 1.
+
+```bash
+export DESLOP_MIN_FILES=3
+```
+
 Installed through `npx skills add`, `deslop` has no hook, so it fires only when the agent
 judges it relevant or when you ask for it by name.
 
