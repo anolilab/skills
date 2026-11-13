@@ -1,3 +1,9 @@
+## deslop [0.3.0](https://github.com/anolilab/skills/compare/deslop@0.2.0...deslop@0.3.0) (2026-11-13)
+
+### Features
+
+* **deslop:** add DESLOP_MIN_FILES to batch small follow-up edits ([#54](https://github.com/anolilab/skills/issues/54)) ([1394f6f](https://github.com/anolilab/skills/commit/1394f6f7b77bc08caf8de9675b933c8da15db3bf))
+
 ## deslop [0.2.0](https://github.com/anolilab/skills/compare/deslop@0.1.0...deslop@0.2.0) (2026-11-04)
 
 ### Features

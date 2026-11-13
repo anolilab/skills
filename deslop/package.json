@@ -1,6 +1,6 @@
 {
   "name": "deslop",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Removes AI-generated slop from a branch's changes without altering behaviour: narrating comments, needless defensive code, casts that dodge the type system, single-use abstractions, and over-mocked tests.",
   "license": "MIT",
