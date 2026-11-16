@@ -6,7 +6,7 @@
 - Sentences
 - Patterns that read as machine-written
 - Numbers, names, and dates
-- German
+- Language
 - Links
 
 ## Voice
@@ -53,15 +53,11 @@ Remove these in every draft:
 - Round where precision is false. "About a third" is honest; "33.7%" from a vendor
   survey is not.
 
-## German
+## Language
 
-- Keep the form of address from the context file ("Sie" or "du") throughout,
-  including in components and calls to action.
-- Typographic quotes („...“), the decimal comma, and a space before units (4 GB).
-- Use an established German term when one exists; keep English where German
-  developers say the English word (Deployment, Pull Request) and do not alternate.
-- Gender-inclusive language as the context file says; if it says nothing, prefer
-  neutral wording ("Entwicklungsteam") over forms that need special characters.
+These rules hold in every language. The rules for German and English, including
+typography, number formats, and each language's machine-written patterns, are in
+`german.md` and `english.md`. Read the one for the article's language before drafting.
 
 ## Links
 

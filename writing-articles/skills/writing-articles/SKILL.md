@@ -1,14 +1,17 @@
 ---
 name: writing-articles
 description: >
-  Researches, writes, and reviews long-form blog articles that answer one reader
-  question, rank in search, and get cited by AI answers: answer-first structure, dated
-  and verified sources, the author's first-hand experience, one call to action, and
-  correctly labelled affiliate links. Use when the user says "write an article",
-  "blog post about", "Blogartikel", "Artikel schreiben", "SEO article", "update this
-  article", or hands over a topic, keyword, or outline for the blog. Reads the
-  project's article context file for voice, format, and components. Not for landing
-  page or ad copy, content calendars, or proofreading a finished text.
+  Researches, writes, edits, and reviews long-form blog articles in German or English
+  that answer one reader question, rank in search, and get cited by AI answers:
+  answer-first structure, dated and verified sources, the author's first-hand
+  experience, one call to action, correctly labelled affiliate links, and native
+  language without machine-written patterns. Use when the user says "write an
+  article", "blog post about", "Blogartikel", "Artikel schreiben", "SEO article",
+  "update this article", "improve the German", "Text verbessern", "überarbeiten",
+  "klingt nach KI", or hands over a topic, keyword, or outline for the blog. Also
+  improves the language of existing articles and site copy, including translation
+  catalogs. Reads the project's article context file for voice, format, and
+  components. Not for writing new landing page or ad copy, or content calendars.
 ---
 
 # Writing articles
@@ -52,6 +55,25 @@ registry, legal market, internal link targets.
   (content directory, frontmatter of existing posts, components, positioning docs such
   as `.agents/product-marketing-context.md`), then ask the user only for what is still
   missing, in one message. Continue once it is answered.
+
+## Language
+
+Write each language natively, never by translating sentence by sentence. Before
+drafting or editing, read the reference for the text's language:
+[references/german.md](references/german.md) or
+[references/english.md](references/english.md). They cover register, word order,
+anglicisms, typography, number formats, and each language's machine-written patterns.
+
+[scripts/style_check.py](scripts/style_check.py) finds the mechanical part: dash
+punctuation, hidden characters, stock phrases, contrast reveals, quote marks, decimal
+and unit formats, calques, colon headings, bold overuse. It detects the language from
+the file name (`.en.mdx`) or frontmatter, needs no packages, and exits 1 on errors:
+
+```bash
+python3 scripts/style_check.py content/blog/post.mdx content/blog/post.en.mdx
+```
+
+Errors must be fixed. Warnings are leads to confirm in context, not verdicts.
 
 ## Workflow
 
@@ -105,7 +127,7 @@ an FAQ only for questions people actually ask. Templates per type are in
 ### 4. Draft
 
 Write in the context file's voice and language, following
-[references/style.md](references/style.md). Put first-hand markers where experience
+[references/style.md](references/style.md) and the language reference. Put first-hand markers where experience
 belongs. Use the project's components (comparison cards, callouts, the call to action
 block) as the context file describes, and nothing it does not list.
 
@@ -130,7 +152,8 @@ a date you did not change content for.
 
 ### 7. Review
 
-Score the draft against [references/review.md](references/review.md). Any blocker
+Run the style checker, then score the draft against
+[references/review.md](references/review.md). Any blocker
 fails the review regardless of score. Fix, then review again. Stop after three rounds
 and report what still fails rather than shipping it as done.
 
@@ -139,6 +162,18 @@ and report what still fails rather than shipping it as done.
 Keep the slug and URL. Re-verify every fact, price, and date-sensitive claim against
 its source; replace what changed, mark what you could not verify. Set the updated date
 only when the content changed. Run the same review.
+
+## Improving the language of existing text
+
+When the request is about the language, not the facts ("improve the German", "klingt
+nach KI", "überarbeite die Texte"), skip the brief and research. Follow
+[references/editing.md](references/editing.md): lock the claims and voice, run the
+checker, fix substance, then language, then typography, and compare the locks at the
+end. This covers articles, page copy, and translation catalogs. A text that needs no
+changes comes back unchanged, and saying so is a valid result.
+
+Work one file at a time, and for a pair of languages, edit both and compare them for
+matching facts. For many files, report per file.
 
 ## Report
 

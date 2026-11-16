@@ -15,6 +15,7 @@ Any one fails the review, whatever the score:
   call to action.
 - The opening does not answer the question.
 - A claim the context file's "Never" section rules out.
+- `scripts/style_check.py` reports an error on the file.
 - Frontmatter that does not match the project's schema, or a date set without a content
   change.
 
@@ -26,7 +27,7 @@ Any one fails the review, whatever the score:
 | Information gain | 20 | The brief's "adds ___" is visible: first-hand material, a method, a verdict, or data the others lack |
 | Accuracy and sources | 20 | Every checkable claim sourced at the claim, dated where it can change, sources primary where possible |
 | Structure and scanning | 15 | Headings answer sub-questions, sections quotable alone, tables or steps where they help |
-| Voice and style | 10 | Context file's voice and address throughout; none of the patterns in style.md; no spelling, grammar, or punctuation errors after a slow proofreading pass |
+| Voice and style | 10 | Context file's voice and address throughout; none of the patterns in style.md or the language reference; checker warnings confirmed or resolved; no spelling, grammar, or punctuation errors after a slow proofreading pass |
 | Call to action and links | 10 | One fitting call to action after the answer; internal links to related pages; paid links only where useful |
 
 Ready to publish: 85 or more and no blocker. Ready for the author's input: no blocker
