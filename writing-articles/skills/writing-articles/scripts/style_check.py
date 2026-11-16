@@ -252,8 +252,8 @@ def check(path: Path, lang: str | None) -> tuple[str, list[Finding]]:
         add(pos, "warn", "drama-paragraphs", f"{len(short)} one-line paragraphs used for effect")
 
     if lang == "de":
-        for m in re.finditer(r"„[^“”\n]{1,200}”", prose):
-            add(m.start(), "error", "quote-pair", "German quote closed with ” instead of “", m.end())
+        for m in re.finditer(r"„[^“”\"\n]{1,200}[”\"]", prose):
+            add(m.start(), "error", "quote-pair", "German quote closed with ” or \" instead of “", m.end())
         straight = list(re.finditer(r"(?<![=\w])\"[^\"\n]{1,120}\"", prose))
         if straight:
             add(straight[0].start(), "warn", "straight-quotes", f"{len(straight)} straight quotes in prose; use „…“", straight[0].end())
@@ -263,7 +263,7 @@ def check(path: Path, lang: str | None) -> tuple[str, list[Finding]]:
             add(m.start(), "warn", "decimal-point", "decimal point; German uses a comma (3,5 GB)", m.end())
         for m in re.finditer(r"\b\d+(?:GB|MB|KB|TB|ms)\b", prose):
             add(m.start(), "warn", "unit-space", "no space before the unit (4 GB)", m.end())
-        for m in re.finditer(r"\b[A-ZÄÖÜ][a-zäöüß]+'s\b", prose):
+        for m in re.finditer(r"\b(?!Let's|It's|That's|What's|McDonald's)[A-ZÄÖÜ][a-zäöüß]+'s\b", prose):
             add(m.start(), "warn", "apostrophe-genitive", "English genitive apostrophe; German writes \"Peters\"", m.end())
         for pattern, fix in CALQUES:
             for m in re.finditer(pattern, unquoted, flags=re.I):
