@@ -57,10 +57,12 @@ rather than into the current project.
 | --- | --- | --- |
 | `deslop` | [`deslop`](deslop/skills/deslop/) | Strips AI-generated slop out of the changes on a branch: narrating comments, unasked-for defensive code, `any`/`unknown` casts, single-use wrappers, mock-heavy tests. Behaviour stays identical. Can run on its own when a turn ends. |
 | `babysit-pr` | [`babysit-pr`](babysit-pr/skills/babysit-pr/) | Takes an open PR you wrote through review and CI rounds: fixes the real findings, answers and resolves the rest, pushes, and stops at green and approved or at a stop point you set. Merges only when you ask. |
+| | [`file-pr`](babysit-pr/skills/file-pr/) | Opens a concise PR for finished work: checks for an existing PR, reviews the diff, writes a title in the repo's convention and a description that leads with the problem, and checks both for secrets before posting. |
 | | [`leaving-pr-comments`](babysit-pr/skills/leaving-pr-comments/) | Formats every GitHub comment an agent posts for you: marks it as agent-written, keeps it short and checkable, strips secrets and local paths, and posts it without quoting damage. |
 | | [`pr-state`](babysit-pr/skills/pr-state/) | Answers "state?" with one table of the PRs in play: required checks, open threads and bot findings, review decision, mergeability, and the decisions waiting on you. Read-only. |
 | `teardown` | [`teardown`](teardown/skills/teardown/) | Compares another project against yours and returns a ranked, evidence-backed list of what it has that you lack, checked against your code first. Builds nothing until you pick items. |
 | `thermos` | [`thermos`](thermos/skills/thermos/) | Runs a thermo-nuclear review of a branch: one Opus pass for bugs, breakage, security and feature-gate leaks, one for maintainability and file size, each checked against the code, merged into one report. Edits nothing. |
+| `ship` | [`ship`](ship/skills/ship/) | Carries finished work through deslop, one thermo-nuclear review, proof, a PR, and babysitting. Stops with the PR ready, and merges at the gate only when you say full send. Uses `deslop`, `thermos` and `babysit-pr`. |
 | `ui` | [`ui`](ui/skills/ui/) | Builds and fixes web and React Native or Expo interfaces in the product's own style, from a complaint or a screenshot, and checks the result rendered in a browser or simulator. |
 | `agent-health` | [`agent-health`](agent-health/skills/agent-health/) | Audits your agent setup and recent session transcripts (instructions, settings, hooks, memory, skills, repeated errors, blocked commands, review loops) and reports each problem with evidence and a pasteable fix. Report-only. |
 | `writing-articles` | [`writing-articles`](writing-articles/skills/writing-articles/) | Researches, writes, and reviews blog articles that answer one reader question: answer first, dated and verified sources, the author's own experience marked for them to fill in instead of invented, one call to action, and affiliate links labelled for the market. Reads a per-project context file for voice, format, and components. |
@@ -136,6 +138,7 @@ brings the `deslop` hook, which the `npx` route does not.
 /plugin install babysit-pr@anolilab
 /plugin install teardown@anolilab
 /plugin install thermos@anolilab
+/plugin install ship@anolilab
 /plugin install ui@anolilab
 /plugin install agent-health@anolilab
 ```
