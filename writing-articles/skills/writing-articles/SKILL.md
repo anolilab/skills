@@ -67,10 +67,12 @@ anglicisms, typography, number formats, and each language's machine-written patt
 [scripts/style_check.py](scripts/style_check.py) finds the mechanical part: dash
 punctuation, hidden characters, stock phrases, contrast reveals, quote marks, decimal
 and unit formats, calques, colon headings, bold overuse. It detects the language from
-the file name (`.en.mdx`) or frontmatter, needs no packages, and exits 1 on errors:
+the file name (`.en.mdx`) or frontmatter, needs no packages, and exits 1 on errors.
+`<skill-dir>` is the directory this file is in; the article paths stay relative to the
+project:
 
 ```bash
-python3 scripts/style_check.py content/blog/post.mdx content/blog/post.en.mdx
+python3 <skill-dir>/scripts/style_check.py content/blog/post.mdx content/blog/post.en.mdx
 ```
 
 Errors must be fixed. Warnings are leads to confirm in context, not verdicts.

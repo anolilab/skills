@@ -35,7 +35,7 @@ it.
 
 Prices, plan names, free tiers, limits, API versions, legal deadlines, and commission
 rates go stale. Either state them with the month and year checked ("as listed on the
-pricing page in March"), or describe the shape ("billed per seat, with a free tier")
+pricing page in March 2026"), or describe the shape ("billed per seat, with a free tier")
 and link to the source. Never copy them from another article.
 
 ## Information gain

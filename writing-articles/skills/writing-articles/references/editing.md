@@ -38,7 +38,7 @@ Before the first edit, list what must survive. Compare it again after the last e
 2. Run the checker on the file and keep its output:
 
    ```bash
-   python3 scripts/style_check.py <file>
+   python3 <skill-dir>/scripts/style_check.py <file>
    ```
 
    Errors must be gone at the end. Warnings are leads: confirm each one in context

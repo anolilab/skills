@@ -135,15 +135,29 @@ def blank_expressions(text: str) -> str:
     return "".join(out)
 
 
-def prose_only(text: str) -> str:
+def po_values(text: str) -> str:
+    """Keep only the msgstr text of a gettext catalog; ids, context, and comments are not editable prose."""
+    text = re.sub(r"^#.*$", blank, text, flags=re.M)
+    text = re.sub(r'^(?:msgctxt|msgid|msgid_plural) .*\n(?:[ \t]*".*\n?)*', blank, text, flags=re.M)
+    text = re.sub(r'^msgstr(?:\[\d+\])? "', blank, text, flags=re.M)
+    return re.sub(r'^([ \t]*)"|"[ \t]*$', lambda m: " " * len(m.group(0)), text, flags=re.M)
+
+
+def prose_only(text: str, suffix: str = ".mdx") -> str:
     """Blank out everything that is not running prose: frontmatter, code, markup, links."""
+    if suffix == ".po":
+        text = po_values(text)
     text = re.sub(r"\A---\n.*?\n---\n", blank, text, flags=re.S)
-    text = re.sub(r"^(`{3,}|~{3,}).*?^\1[ \t]*$", blank, text, flags=re.S | re.M)
+    # CommonMark: the closing fence uses the opener's character and is at least as long.
+    text = re.sub(r"^(`{3,})(?!`).*?^\1`*[ \t]*$", blank, text, flags=re.S | re.M)
+    text = re.sub(r"^(~{3,})(?!~).*?^\1~*[ \t]*$", blank, text, flags=re.S | re.M)
     text = re.sub(r"`[^`\n]+`", blank, text)
     text = re.sub(r"\{/\*.*?\*/\}|<!--.*?-->", blank, text, flags=re.S)
     text = re.sub(r"^(?:import|export) .*$", blank, text, flags=re.M)
     text = re.sub(r"</?[A-Za-z][\w.]*(?:\s(?:[^<>{}]|\{[^{}]*\})*)?/?>", blank, text, flags=re.S)
-    text = blank_expressions(text)
+    if suffix in {".mdx", ".po"}:
+        # {…} is an expression only in MDX (and a placeholder in catalogs); in plain text a brace is a brace.
+        text = blank_expressions(text)
     text = re.sub(r"\]\([^)\s]*\)", lambda m: "]" + " " * (len(m.group(0)) - 1), text)
     text = re.sub(r"https?://\S+", blank, text)
     return text
@@ -191,7 +205,7 @@ def sentences(prose: str) -> list[str]:
 def check(path: Path, lang: str | None) -> tuple[str, list[Finding]]:
     raw = path.read_text(encoding="utf-8")
     lang = lang or detect_lang(path, raw)
-    prose = prose_only(raw)
+    prose = prose_only(raw, path.suffix.lower())
     # Phrases named in quotes are mentioned, not used: "avoid 'delve'" is not slop.
     unquoted = re.sub(r"\"[^\"]{0,120}\"|„[^“”„]{0,120}[“”]|“[^”“]{0,120}”", blank, prose)
     found: list[Finding] = []
@@ -202,8 +216,13 @@ def check(path: Path, lang: str | None) -> tuple[str, list[Finding]]:
     for m in HIDDEN.finditer(raw):
         found.append(Finding(line_of(raw, m.start()), "error", "hidden-char", f"invisible character U+{ord(m.group(0)):04X}"))
 
+    quoted_lines = {line_of(prose, m.start()) for m in re.finditer(r"^[ \t]*>", prose, flags=re.M)}
     for m in re.finditer(EM_DASH, prose):
-        add(m.start(), "error", "em-dash", "em dash; use a period, comma, colon, or parentheses")
+        if line_of(prose, m.start()) in quoted_lines:
+            # A block quotation is the source's wording, which the author may not change.
+            add(m.start(), "warn", "em-dash", "em dash in a block quotation; keep it if the source has it")
+        else:
+            add(m.start(), "error", "em-dash", "em dash; use a period, comma, colon, or parentheses")
     for m in re.finditer(r"(?<=\w) (?:-|--) (?=\w)", prose):
         add(m.start(), "error", "hyphen-dash", "hyphen used as a dash")
     for para in re.finditer(r"(?:[^\n]+\n?)+", prose):
