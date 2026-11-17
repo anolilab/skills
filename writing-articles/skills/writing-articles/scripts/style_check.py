@@ -176,6 +176,12 @@ def detect_lang(path: Path, raw: str) -> str:
         return "en"
     if re.search(r"\.de\.(?:mdx?|txt|html)$", path.name):
         return "de"
+    if path.suffix.lower() == ".po":
+        header = re.search(r'^"Language: (de|en)\b', raw, flags=re.M)
+        if header:
+            return header.group(1)
+        # msgid text is usually the source language; count only the translations.
+        raw = po_values(raw)
     front = re.match(r"\A---\n(.*?)\n---", raw, flags=re.S)
     if front:
         lang = re.search(r"^(?:lang|language|locale):\s*[\"']?(de|en)", front.group(1), flags=re.M)
