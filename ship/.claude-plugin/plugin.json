@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "ship",
+  "displayName": "Ship",
+  "description": "Takes finished work on a branch through deslop, one thermo-nuclear review, proof, a PR and babysitting, and merges it at the gate only when you say full send.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Anolilab",
+    "url": "https://github.com/anolilab"
+  },
+  "homepage": "https://github.com/anolilab/skills/tree/main/ship",
+  "repository": "https://github.com/anolilab/skills",
+  "license": "MIT",
+  "keywords": ["ship", "pull-request", "merge", "review", "full-send"],
+  "skills": "./skills/"
+}

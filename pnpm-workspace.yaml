@@ -6,3 +6,4 @@ packages:
   - "ui"
   - "agent-health"
   - "writing-articles"
+  - "ship"

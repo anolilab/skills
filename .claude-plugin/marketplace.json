@@ -17,7 +17,7 @@
     {
       "name": "babysit-pr",
       "source": "./babysit-pr",
-      "description": "Takes an open pull request through review and CI rounds: fixes the real findings, answers and resolves the rest, pushes, and stops at green and approved or at a stop point you set.",
+      "description": "Opens a concise pull request, then takes it through review and CI rounds: fixes the real findings, answers and resolves the rest, pushes, and stops at green and approved or at a stop point you set.",
       "category": "developer-tools",
       "license": "MIT"
     },
@@ -54,6 +54,13 @@
       "source": "./writing-articles",
       "description": "Researches, writes, and reviews blog articles that answer one reader question, with dated sources, the author's own experience, one call to action, and correctly labelled affiliate links.",
       "category": "productivity",
+      "license": "MIT"
+    },
+    {
+      "name": "ship",
+      "source": "./ship",
+      "description": "Takes finished work through deslop, one thermo-nuclear review, proof, a PR and babysitting, and merges at the gate only on full send.",
+      "category": "developer-tools",
       "license": "MIT"
     }
   ]

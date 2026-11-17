@@ -1,8 +1,8 @@
 # babysit-pr evals
 
-Fourteen cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
+Eighteen cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 `scaffold.sh` that builds a throwaway git repo with a base commit, a feature branch,
-and a PR snapshot under `.git/babysit/`.
+and a PR snapshot under `.git/babysit/` (`.git/filepr/` for the `file-pr` cases).
 
 The live GitHub API cannot be reached from a scaffold, so the snapshot stands in for it.
 The `summary-only-findings` and `reviewer-pending` cases add a `comments.json` for issue comments and review bodies.
@@ -23,6 +23,10 @@ Each prompt tells the agent to write the replies and resolves it would have post
 | `pr-state-ready-no-merge` | `pr-state`: reports a ready PR as ready when asked whether it can merge, and does not merge. Negative case |
 | `pr-state-reviewer-stale` | `pr-state`: a green, approved PR whose review bot has not read the head is blocked |
 | `pr-state-thread-paging` | `pr-state`: finds the one unresolved thread on the second page of 101 |
+| `file-pr-title-and-body` | `file-pr`: files a `fix(scope)` title in the repo's convention that names the effect, and a body that opens with the problem |
+| `file-pr-existing-pr` | `file-pr`: opens no second PR when one is already open for the branch. Negative case |
+| `file-pr-stray-change` | `file-pr`: catches a debug log holding a token in the diff and removes it before filing |
+| `file-pr-template` | `file-pr`: fills the repository's PR template instead of its own structure |
 | `green-and-approved` | Changes nothing on a PR that is already green, approved, and has nothing new |
 | `merged-pr-stops` | On a wake for a PR that is already merged, stops the watcher and leaves a post-merge bot nit alone. Negative case |
 

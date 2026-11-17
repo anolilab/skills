@@ -203,6 +203,8 @@ importers:
 
   deslop: {}
 
+  ship: {}
+
   teardown: {}
 
   thermos: {}
