@@ -56,6 +56,17 @@ them. [references/gh.md](references/gh.md) lists the bots and how to read a summ
 - A summary only counts once it reviewed the head commit. If it names an older commit,
   or says the review is still running, the reviewer is not done and the PR is not
   finished, however green the checks are.
+- Some bots review a new head in two passes. The first pass only edits the summary to mark
+  older findings resolved. The full review follows a few minutes later, usually after a
+  new "busy working" placeholder, and it can add new findings. A resolved-only edit is not
+  the review of the head. Wait for the full pass.
+- A bot whose only output on a head is a "new review started" or "superseded" placeholder
+  is still reviewing that head. Wait for it. It counts as absent only once it has done
+  this on several heads of the PR without ever posting a full review, for example only
+  placeholders across three or more pushes. Then don't wait for it, and say so in the
+  report. A bot that says it hit
+  its daily or quota limit is not absent: it will review later, so ask the user whether to
+  wait for it or go without, and remember the answer for the session.
 - `coderabbitai` is advisory. Handle its findings when they arrive, but never wait for
   its review, and never hold the finish line or a merge for it.
 - Skip findings the bot itself marks resolved or outdated. The count in the summary
@@ -108,12 +119,24 @@ narrows code.
 The budget caps review findings only. A required check that fails is not a finding: it
 still gets fixed, whatever the round.
 
+The repository's rules and the user's word override this budget. When either says to fix
+every valid finding with no round cap, do that, and use the budget only to notice a
+pattern: after a few rounds that each find new edge cases in the same design, ask the
+user whether to keep fixing or change the design.
+
 ## Make the change
 
 - Run the repository's own checks for the files you touched before pushing. Use the
   narrowest command that covers them; the full suite is for the end of a round.
 - Commit with a message that describes the change on its own merits, not the review
   comment that prompted it.
+- Check that the PR is still open in the same command that pushes, for example
+  `[ "$(gh pr view <n> --json state --jq .state)" = OPEN ] && git push ...`. A PR can merge
+  between wakes, and many repositories delete a merged PR's branch, so a push to it
+  recreates the deleted branch. If that happens, delete the recreated branch.
+- Run commit, push, a check that the remote branch has the new commit, and the reply as
+  one `&&` chain. A pre-commit hook such as a secret scanner can refuse the commit, and a
+  reply already posted would then name a commit that does not exist.
 - Keep the diff inside the PR's purpose. A finding that asks for a refactor of
   neighbouring code is a new piece of work, so defer it.
 
@@ -186,6 +209,18 @@ went away, a registry that did not respond. For a flake, the log shows the cause
 rerun only the failed jobs with `gh run rerun <run-id> --failed`. Retry at most twice.
 A failure that repeats after that is a real one, and you fix it.
 
+A third kind comes from the base or from code outside the PR:
+
+- **The base itself is broken** (a check fails on the base branch the same way, often
+  after another PR merged): open one small PR that fixes the base, get it merged, then
+  bring the base into this PR. Every queued PR fails until then.
+- **A test outside the PR flakes** (a timeout under load, a story clicking too early):
+  fix that test in its own small PR, by its root cause and not with a longer timeout,
+  and keep this PR unchanged.
+- **A rerun can't pick up a fix that landed on the base.** A rerun of a pull request run
+  reuses the merge commit it was first made from. Bring the base into the branch, by a
+  merge or a rebase, so CI runs against the fixed base.
+
 ## Stop conditions
 
 Finish when all of these hold:
@@ -195,7 +230,8 @@ Finish when all of these hold:
   said to ignore in this conversation is ignored.
 - The ledger has no open finding, and every review bot except the advisory one has
   reviewed the head commit.
-- The branch is not `BEHIND` its base and has no conflict.
+- The branch has no conflict, and it is not `BEHIND` its base. With a merge queue,
+  `BEHIND` alone is fine, because the queue tests the PR on the latest base.
 - `reviewDecision` is `APPROVED`, or it is empty and the repository requires no review.
   When the ruleset requires an approving review that the author cannot give, the finish
   line is the first two conditions, and the report says a reviewer or an admin merge is
@@ -206,6 +242,13 @@ conversation. A request to babysit a PR is not a request to merge it. Before the
 run the preflight in [references/gh.md](references/gh.md) against the exact head commit
 you are merging: an earlier pass does not count, because a bot can post between the
 last check and the merge. An admin merge needs the user's explicit word for that too.
+With a merge queue or auto-merge, the merge happens later, and a wake can arrive after
+GitHub has already merged. So queue only once every review bot has posted its full review
+of the head and none is still running. A bot that reviews in two passes has not finished
+after the first one. Until the PR lands, check on every wake whether a review started
+after you queued. If one did and the PR is still queued, take it out or turn auto-merge
+off, and queue it again once that review is done and clean. If the PR merged first, read
+the review when it lands and fix any real finding in a follow-up PR.
 
 Stop before the finish line when:
 

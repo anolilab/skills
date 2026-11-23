@@ -56,7 +56,9 @@ Run the `thermos` skill one time on the diff, with its reviewers on the stronges
 Done when both have returned and you have one deduplicated list.
 
 Do not run it again after the fixes. The PR's review bots, such as qodo and coderabbit,
-read every push, so a second internal review only repeats what step 6 collects.
+read every push, so a second internal review only repeats what step 6 collects. If the
+repository or the user asks for an independent review before every push, that rule wins:
+follow it in step 6 too.
 
 ## 3. Fix
 
@@ -96,14 +98,20 @@ All of these hold on the latest head commit:
 - every review bot except the advisory one has reviewed the head, and each finding is
   fixed or declined with a written reason;
 - no human review requests changes;
-- the branch is not `BEHIND` or conflicting, and no base commit since the last green run
-  touches this PR's files.
+- the branch is not conflicting, and it is not `BEHIND` or touched by a base commit since
+  the last green run. With a merge queue, `BEHIND` alone is fine: the queue tests the PR
+  on the latest base.
 
 Default and full stop: report the PR as ready and stop. Full send: run the merge
 preflight in the `babysit-pr` skill, then merge with the method the repo uses (check
 recent merges), and stay until GitHub reports it merged if a queue or auto-merge is in
-use. Never pass `--admin` or bypass a rule. A gate that cannot pass goes to the user as a
-question.
+use. Queue only once every review bot has posted its full review of the head. Until it
+lands, every wake checks the review bots again. If one starts a new review after you
+queued the PR and it is still queued, take it out (or turn auto-merge off) and queue it
+again once that review is done and clean. If it merged first, read the review when it
+lands and fix any real finding in a follow-up PR. Never pass `--admin` or bypass a rule
+unless the user asked for that merge to bypass them. A gate that cannot pass goes to the
+user as a question.
 
 ## Ask only when stuck
 

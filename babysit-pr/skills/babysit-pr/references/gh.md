@@ -80,6 +80,10 @@ Reading a summary:
 - The commit it reviewed shows in the permalinks (`/blob/<sha>/`). The most common SHA
   there is the commit it read. If it is not `headRefOid`, the review is stale.
 - A body that says it is working, or "review in progress", is not a result yet.
+- An edit that only moves findings to "Resolved" is often the first of two passes. The full
+  review of the head follows minutes later.
+- A comment that only says "New Review Started … superseded" or that the bot hit its daily
+  or trial limit carries no review.
 - A review body can list findings that never became threads, under headings such as
   "Outside diff range comments" and "Nitpick comments". Count those too.
 
@@ -109,7 +113,14 @@ Prefer the harness's pull request watcher. Without one, run
 harness's monitor tool with a timeout, and read the result. Add `--fail-fast` to stop at
 the first failure. Do not wrap it in a loop.
 
-To rerun only the failed jobs of a run: `gh run rerun <run-id> --failed`.
+To rerun only the failed jobs of a run: `gh run rerun <run-id> --failed`. A rerun reuses
+the run's original commit. For a pull request that is the merge with the base as it was
+then, so a fix that landed on the base later is not included. Bring the base into the
+branch for that.
+
+`gh run view --log-failed` prints nothing while other jobs of the run are still going.
+Read one finished job with
+`curl -sL -H "Authorization: Bearer $(gh auth token)" https://api.github.com/repos/<owner>/<repo>/actions/jobs/<job-id>/logs`.
 
 ## Rate limits
 
@@ -138,7 +149,26 @@ gh pr view <number> --json mergeStateStatus,reviewDecision,mergeable
 git fetch origin   # then: no base commit since the last green run touches this PR's files
 # threads: page to totalCount, none unresolved
 # summaries and review bodies: reviewed $head, no open finding
+# no review in progress: no "busy working" / "review in progress" placeholder, and no
+#   summary edited since your last read (a resolved-only edit means the full pass is still coming)
 ```
+
+Run the last two checks in the same command as the merge. That keeps the gap short, but
+not empty: a bot can still start a review after the check and before GitHub merges. The
+watch after queuing covers the queue's wait. A review that lands after the merge is read
+like any other, and a real finding gets a follow-up PR.
+
+With a merge queue or auto-merge, the PR merges later. Until it does, every wake checks for
+a review that started after you queued. To take a PR back out:
+
+```bash
+id=$(gh api graphql -f query='{repository(owner:"<owner>",name:"<repo>"){pullRequest(number:<n>){id isInMergeQueue}}}' \
+  --jq '.data.repository.pullRequest.id')
+gh api graphql -f query='mutation($id:ID!){dequeuePullRequest(input:{id:$id}){clientMutationId}}' -f id=$id
+gh api graphql -f query='mutation($id:ID!){disablePullRequestAutoMerge(input:{pullRequestId:$id}){clientMutationId}}' -f id=$id
+```
+
+Dequeue works only while the PR is in the queue. Before that, turn off auto-merge.
 
 Merge with the method the repository uses, for example
 `gh pr merge <number> --squash`. Add `--admin` only when the user said to bypass the
