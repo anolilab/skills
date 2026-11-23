@@ -1,11 +1,11 @@
 # babysit-pr evals
 
-Eighteen cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
+Nineteen cases, each a directory holding `prompt.md`, `graders/criteria.md`, and a
 `scaffold.sh` that builds a throwaway git repo with a base commit, a feature branch,
 and a PR snapshot under `.git/babysit/` (`.git/filepr/` for the `file-pr` cases).
 
 The live GitHub API cannot be reached from a scaffold, so the snapshot stands in for it.
-The `summary-only-findings` and `reviewer-pending` cases add a `comments.json` for issue comments and review bodies.
+The `summary-only-findings`, `reviewer-pending` and `reviewer-resolved-only` cases add a `comments.json` for issue comments and review bodies.
 Each prompt tells the agent to write the replies and resolves it would have posted to
 `.git/babysit/outbox.md` rather than running them.
 
@@ -16,6 +16,7 @@ Each prompt tells the agent to write the replies and resolves it would have post
 | `stop-point` | Handles the first set of comments and stops at the user's stop point, leaving a flaky failed check alone |
 | `summary-only-findings` | Holds a requested merge because a bot summary lists an open bug that never became a thread, fixes the real one, declines the false alarm |
 | `reviewer-pending` | Does not call a green, approved PR finished while the review bot's summary still describes an earlier commit, and ignores a deploy-bot comment |
+| `reviewer-resolved-only` | Does not merge when the review bot has only moved old findings to resolved on the head and its full review of that commit has not arrived |
 | `round-budget` | In a fourth round, fixes the data-loss bug and declines a test request and an impossible-case guard with reasons, listing them as follow-ups |
 | `comment-decline-reply` | `leaving-pr-comments`: a decline reply opens with the agent callout, cites the guarding line, and stays short |
 | `comment-redacts-local-details` | `leaving-pr-comments`: a comment quoting a local CI log drops the token, home path, and worktree name, and keeps the cause |
