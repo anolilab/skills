@@ -60,8 +60,11 @@ them. [references/gh.md](references/gh.md) lists the bots and how to read a summ
   older findings resolved. The full review follows a few minutes later, usually after a
   new "busy working" placeholder, and it can add new findings. A resolved-only edit is not
   the review of the head. Wait for the full pass.
-- A bot that has never posted a full review on this PR, only "superseded" or "new review
-  started" placeholders, is absent for this PR. Don't wait for it. A bot that says it hit
+- A bot whose only output on a head is a "new review started" or "superseded" placeholder
+  is still reviewing that head. Wait for it. It counts as absent only once it has done
+  this on several heads of the PR without ever posting a full review, for example only
+  placeholders across three or more pushes. Then don't wait for it, and say so in the
+  report. A bot that says it hit
   its daily or quota limit is not absent: it will review later, so ask the user whether to
   wait for it or go without, and remember the answer for the session.
 - `coderabbitai` is advisory. Handle its findings when they arrive, but never wait for
@@ -239,10 +242,13 @@ conversation. A request to babysit a PR is not a request to merge it. Before the
 run the preflight in [references/gh.md](references/gh.md) against the exact head commit
 you are merging: an earlier pass does not count, because a bot can post between the
 last check and the merge. An admin merge needs the user's explicit word for that too.
-With a merge queue or auto-merge, the merge happens later: on every wake until it lands,
-check whether a review bot started a new review after you queued. If one did, take the PR
-out of the queue or turn auto-merge off, and queue it again once that review is done and
-clean.
+With a merge queue or auto-merge, the merge happens later, and a wake can arrive after
+GitHub has already merged. So queue only once every review bot has posted its full review
+of the head and none is still running. A bot that reviews in two passes has not finished
+after the first one. Until the PR lands, check on every wake whether a review started
+after you queued. If one did and the PR is still queued, take it out or turn auto-merge
+off, and queue it again once that review is done and clean. If the PR merged first, read
+the review when it lands and fix any real finding in a follow-up PR.
 
 Stop before the finish line when:
 

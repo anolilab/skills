@@ -153,8 +153,10 @@ git fetch origin   # then: no base commit since the last green run touches this 
 #   summary edited since your last read (a resolved-only edit means the full pass is still coming)
 ```
 
-Run the last two checks in the same command as the merge, so nothing can post between
-them and the merge.
+Run the last two checks in the same command as the merge. That keeps the gap short, but
+not empty: a bot can still start a review after the check and before GitHub merges. The
+watch after queuing covers the queue's wait. A review that lands after the merge is read
+like any other, and a real finding gets a follow-up PR.
 
 With a merge queue or auto-merge, the PR merges later. Until it does, every wake checks for
 a review that started after you queued. To take a PR back out:
