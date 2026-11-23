@@ -3,7 +3,7 @@
   "name": "ship",
   "displayName": "Ship",
   "description": "Takes finished work on a branch through deslop, one thermo-nuclear review, proof, a PR and babysitting, and merges it at the gate only when you say full send.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Anolilab",
     "url": "https://github.com/anolilab"
