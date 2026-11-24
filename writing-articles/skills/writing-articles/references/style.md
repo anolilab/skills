@@ -41,7 +41,10 @@ Remove these in every draft:
 - Closing summaries that restate the article, and "In conclusion".
 - Inflated words: "leverage", "robust", "seamless", "game-changer", "unlock", "delve",
   "navigate the landscape", and their equivalents in other languages.
-- Em dashes as general punctuation. Use a period, a comma, or a colon.
+- Em dashes as general punctuation. Use a period or a comma; a colon only where it
+  introduces a list or a quote.
+- Colons and semicolons as hinges inside sentences, and sentences that all have the same
+  length and the same opening. The rhythm pass in `human-voice.md` covers these.
 - Bold sprinkled through sentences. Bold the one term a skimmer must catch, if any.
   The short lead of a criteria or options list item is the exception.
 

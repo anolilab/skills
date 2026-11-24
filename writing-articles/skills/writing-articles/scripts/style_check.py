@@ -298,11 +298,36 @@ def check(path: Path, lang: str | None) -> tuple[str, list[Finding]]:
     if len(lengths) >= 20:
         mean = statistics.mean(lengths)
         spread = statistics.pstdev(lengths) / mean if mean else 0
-        if spread < 0.4:
-            add(0, "warn", "flat-rhythm", f"sentence lengths barely vary (stddev/mean {spread:.2f}); mix short and long")
+        if spread < 0.5:
+            add(0, "warn", "flat-rhythm", f"sentence lengths barely vary (stddev/mean {spread:.2f}, aim for 0.5 or more); mix short and long")
         long_ones = sum(n > 30 for n in lengths)
         if long_ones * 10 > len(lengths):
             add(0, "warn", "long-sentences", f"{long_ones} sentences over 30 words")
+        short_ones = sum(n <= 8 for n in lengths)
+        if short_ones * 100 < 15 * len(lengths):
+            add(0, "warn", "few-short", f"only {short_ones} of {len(lengths)} sentences have 8 words or fewer; aim for about one in six")
+
+    # Colons and semicolons inside running text: a label, a colon, then the point ("Wichtig für X: ...") and
+    # clauses chained with semicolons are the sentences detectors and readers most often mark as machine-written.
+    colon_sents = [s for s in sents if re.search(r"\w: \S", s)]
+    if len(sents) >= 10 and len(colon_sents) * 100 > 15 * len(sents):
+        pos = prose.find(colon_sents[0][:40])
+        add(max(pos, 0), "warn", "colon-density", f"{len(colon_sents)} of {len(sents)} sentences hinge on a colon; turn most into two sentences or a subordinate clause")
+    labels = [s for s in sents if re.match(r"(?:[\w-]+ ){0,6}[\w-]+: \S", s)]
+    if len(labels) >= 2:
+        pos = prose.find(labels[0][:40])
+        add(max(pos, 0), "warn", "label-colon", f"{len(labels)} sentences open with a label and a colon (\"{labels[0][:40]}\")")
+    semis = list(re.finditer(r"\w; \w", unquoted))
+    if len(semis) >= 2:
+        add(semis[0].start(), "warn", "semicolons", f"{len(semis)} semicolons in running text; use a period or a conjunction", semis[0].end())
+    tail = r", (?:also|d\. ?h\.|sprich) (?:\d|rund|etwa|knapp|gut)" if lang == "de" else r", (?:i\.e\.|that is|so) (?:\d|about|around|roughly)"
+    for m in re.finditer(tail, unquoted, flags=re.I):
+        add(m.start(), "warn", "appended-figure", "figure tacked on after a comma; give it its own clause", m.end())
+    if len(sents) >= 20:
+        first = [s.split()[0].strip("„\"(").lower() for s in sents]
+        word, count = max(((w, first.count(w)) for w in set(first)), key=lambda item: item[1])
+        if count >= 6 and count * 100 > 12 * len(sents):
+            add(0, "warn", "same-openers", f"{count} of {len(sents)} sentences start with \"{word}\"; front a time, condition, object or link word instead")
 
     found.sort(key=lambda f: (f.line, f.level != "error"))
     return lang, found

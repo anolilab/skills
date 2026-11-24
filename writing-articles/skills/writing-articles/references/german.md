@@ -126,6 +126,13 @@ the ones only German has:
 - Synonym rotation for the same thing (die Studie, die Untersuchung, die Analyse). Pick
   one word and keep it; German readers take a new word for a new thing.
 - Forced casualness: "Ehrlich gesagt", "Spoiler:", "Kurz gesagt:" as openers.
+- Colons as hinges inside sentences: "Wichtig für X: …", "Das Verfahren hat zwei
+  Stufen: …", "Bei fast allen gilt: …". One per paragraph at most; otherwise two
+  sentences or a "weil", "wenn", "denn".
+- Semicolons in running text. German web writing hardly uses them.
+- A figure appended after a comma: "…, also 35 %", "…, d. h. rund 40 Stunden".
+- Balanced pairs that weigh two cases in one symmetric sentence: "X gehört nicht dazu,
+  Y kann dazugehören". Say which case matters.
 
 Fixing a pattern means rewriting the sentence, not swapping in a less suspicious
 word. If removing the pattern leaves nothing, the sentence had nothing to say.
