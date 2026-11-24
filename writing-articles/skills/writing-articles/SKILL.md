@@ -98,6 +98,10 @@ Write a short brief and show it before researching. It names:
 
 - the one question the article answers, as the reader would type it, and the intent
   behind it (learn, compare, decide, do);
+- the primary keyword: the short phrase the reader types, which goes unchanged into
+  the title, the slug, and the `#` heading. Add the follow-up questions the reader
+  asks next, in search or of an AI assistant; they become `##` headings or FAQ
+  entries;
 - the reader, from the context file's personas;
 - the article type, from [references/structure.md](references/structure.md);
 - what this author can add that the current results do not: experience, data, a
@@ -123,20 +127,31 @@ change; use them only with the date you checked them, or link to the source inst
 Answer first: the opening states the answer in two or three sentences. Each `##`
 section answers one sub-question and still makes sense when quoted alone. Use a table
 where the reader compares options, numbered steps where they follow a procedure, and
-an FAQ only for questions people actually ask. Templates per type are in
+an FAQ only for questions people actually ask. When the reader may not know the core
+term, define it early, including what it is not. An article that ranks or compares
+options says how it judged them before the first option. Templates per type are in
 [references/structure.md](references/structure.md).
 
 ### 4. Draft
 
 Write in the context file's voice and language, following
 [references/style.md](references/style.md) and the language reference. Put first-hand markers where experience
-belongs. Use the project's components (comparison cards, callouts, the call to action
-block) as the context file describes, and nothing it does not list.
+belongs. Where the article reviews or explains a tool, ask for the author's own
+screenshots of using it, or a video they recorded, with a marker naming the exact
+screen or moment needed; never use a vendor's marketing image as proof of use. Use the
+project's components (comparison cards, callouts, the call to action block) as the
+context file describes, and nothing it does not list.
 
 ### 5. Call to action and links
 
 - **One primary call to action**, after the article has delivered its answer, matching
-  the brief. A reader who only skims should still meet it.
+  the brief. A reader who only skims should still meet it. It offers the next step for
+  this article's question, not a generic "contact us": a reader comparing tools gets
+  help choosing, a reader with a broken build gets the fix. The button or link text
+  says plainly what the reader gets.
+- **Inline mentions** of the same offer are allowed where a section ends at the point
+  the reader would act, at most two, as plain text links. They never replace the
+  block, and a second, different offer does not belong in the same article.
 - **Affiliate links** only where the reader needs that tool to act on the article, and
   never above the call to action. Recommend the best option even when it pays nothing,
   and say that it pays nothing. Label every paid link as
@@ -147,10 +162,12 @@ block) as the context file describes, and nothing it does not list.
 
 ### 6. Metadata
 
-Fill the project's frontmatter: title (about 60 characters, the question's key terms
-early), description (about 155 characters, the answer in short), slug, tags, dates,
-language, the affiliate flag if it has one, cover and alt text if available. Never set
-a date you did not change content for.
+Fill the project's frontmatter: title (about 60 characters, starting with the primary
+keyword), description (about 155 characters, the answer in short), slug (the primary
+keyword in the project's slug format), tags, dates, language, the affiliate flag if it
+has one, cover and alt text if available. The title, slug, and `#` heading carry the
+same primary keyword; a translation keeps the slug and uses the keyword its own readers
+type. Never set a date you did not change content for.
 
 ### 7. Review
 

@@ -43,6 +43,7 @@ Remove these in every draft:
   "navigate the landscape", and their equivalents in other languages.
 - Em dashes as general punctuation. Use a period, a comma, or a colon.
 - Bold sprinkled through sentences. Bold the one term a skimmer must catch, if any.
+  The short lead of a criteria or options list item is the exception.
 
 ## Numbers, names, and dates
 

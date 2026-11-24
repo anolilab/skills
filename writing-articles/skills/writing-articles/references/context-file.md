@@ -17,7 +17,10 @@ Link the positioning doc if one exists (e.g. `.agents/product-marketing-context.
 - Words and phrases the brand uses; words it avoids.
 
 ## Author
-Name, role, the experience they can speak from first-hand, profile/about URL.
+Name, role, the experience they can speak from first-hand, profile/about URL, and the
+public profiles the byline links to (LinkedIn, GitHub). Whether the page template
+already shows the byline, published and updated dates; if it does not, say so in the
+report, since readers and search engines weigh who wrote a page and how current it is.
 
 ## Format
 - Content directory and file type (e.g. `content/blog/<slug>.mdx`).
