@@ -3,8 +3,10 @@
 
 Reports what can be found without judgement: dash punctuation, hidden characters,
 stock phrases, contrast reveals, quote and number typography, heading and bold
-patterns, and flat sentence rhythm. It reads only the files it is given, needs no
-packages, and makes no network calls.
+patterns, and flat sentence rhythm. It reads only the files it is given and needs no
+packages. It makes no network calls unless a LanguageTool server is given with
+--languagetool or LANGUAGETOOL_URL (for example a local one on
+http://127.0.0.1:8010); its grammar and spelling matches are then added as warnings.
 
 Exit status: 1 when any error is found, 0 otherwise. Warnings never fail the run;
 they are leads for the edit pass, not verdicts.
@@ -17,9 +19,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import statistics
 import sys
+import urllib.error
+import urllib.parse
+import urllib.request
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -158,9 +164,51 @@ def prose_only(text: str, suffix: str = ".mdx") -> str:
     if suffix in {".mdx", ".po"}:
         # {…} is an expression only in MDX (and a placeholder in catalogs); in plain text a brace is a brace.
         text = blank_expressions(text)
-    text = re.sub(r"\]\([^)\s]*\)", lambda m: "]" + " " * (len(m.group(0)) - 1), text)
+    text = re.sub(r"\]\((?:<[^>\n]*>|[^)\s]*)\)", lambda m: "]" + " " * (len(m.group(0)) - 1), text)
     text = re.sub(r"https?://\S+", blank, text)
     return text
+
+
+# Rules that only react to what prose_only() leaves behind (runs of spaces where markup was, headings and list
+# items without a final period), or that flag a valid choice: Oxford -ize spelling in British text, and German
+# place names inside proper names ("Digitalbonus Bayern").
+LT_DISABLED = [
+    "WHITESPACE_RULE",
+    "CONSECUTIVE_SPACES",
+    "PUNCTUATION_PARAGRAPH_END",
+    "SENTENCE_WHITESPACE",
+    "COMMA_PARENTHESIS_WHITESPACE",
+    "OXFORD_SPELLING_Z_NOT_S",
+    "BAYERN",
+]
+
+
+BRITISH = r"\b(?:programmes?|organis\w+|\w+isation|colours?|behaviours?|analys(?:e|ed|ing)|licence|centre|favour\w*)\b"
+AMERICAN = r"\b(?:programs?|organiz\w+|\w+ization|colors?|behaviors?|analyz(?:e|ed|ing)|center|favor\w*)\b"
+
+
+def lt_language(prose: str, lang: str) -> str:
+    """The LanguageTool language code; English follows the spelling the text already uses (American by default)."""
+    if lang == "de":
+        return "de-DE"
+    british = len(re.findall(BRITISH, prose, flags=re.I))
+    american = len(re.findall(AMERICAN, prose, flags=re.I))
+    return "en-GB" if british > american else "en-US"
+
+
+def languagetool(url: str, prose: str, lang: str) -> list[dict]:
+    """Grammar and spelling matches from a LanguageTool server, with offsets into `prose`."""
+    # Markdown markers and bold list labels ("- **Kosten:** Die …") are not part of the sentence; blank them so
+    # offsets stay the same and the sentence after a label is not read as lower-case text.
+    text = re.sub(
+        r"^[ \t]*(?:#{1,6} |[-*+] (?:\*\*[^*\n]+\*\* ?)?|\d+\. (?:\*\*[^*\n]+\*\* ?)?|> |\|.*$)", lambda m: " " * len(m.group(0)), prose, flags=re.M
+    )
+    data = urllib.parse.urlencode({"text": text, "language": lt_language(prose, lang), "disabledRules": ",".join(LT_DISABLED)}).encode()
+    request = urllib.request.Request(url.rstrip("/") + "/v2/check", data=data)
+    with urllib.request.urlopen(request, timeout=120) as response:  # noqa: S310 - the URL is the user's own server
+        matches = json.load(response)["matches"]
+    # A match next to a blanked span (code, a component, a link target) is about the gap, not the prose.
+    return [m for m in matches if "  " not in text[max(0, m["offset"] - 2) : m["offset"] + m["length"] + 2]]
 
 
 def line_of(text: str, pos: int) -> int:
@@ -208,7 +256,7 @@ def sentences(prose: str) -> list[str]:
     return out
 
 
-def check(path: Path, lang: str | None) -> tuple[str, list[Finding]]:
+def check(path: Path, lang: str | None, lt_url: str | None = None) -> tuple[str, list[Finding]]:
     raw = path.read_text(encoding="utf-8")
     lang = lang or detect_lang(path, raw)
     prose = prose_only(raw, path.suffix.lower())
@@ -329,6 +377,24 @@ def check(path: Path, lang: str | None) -> tuple[str, list[Finding]]:
         if count >= 6 and count * 100 > 12 * len(sents):
             add(0, "warn", "same-openers", f"{count} of {len(sents)} sentences start with \"{word}\"; front a time, condition, object or link word instead")
 
+    if lt_url and path.suffix.lower() != ".po":
+        try:
+            unknown: dict[str, int] = {}
+            for match in languagetool(lt_url, prose, lang):
+                start, length = match["offset"], match["length"]
+                if match["rule"].get("issueType") == "misspelling":
+                    # Names and terms fill this list in technical articles; one line per file keeps it readable.
+                    unknown.setdefault(prose[start : start + length], start)
+                    continue
+                hints = [r["value"] for r in match.get("replacements", [])[:3]]
+                hint = f" (try: {', '.join(hints)})" if hints else ""
+                add(start, "warn", f"lt:{match['rule']['id']}", match["message"] + hint, start + length)
+            if unknown:
+                words = sorted(unknown, key=str.lower)
+                add(min(unknown.values()), "warn", "lt:spelling", f"{len(words)} words LanguageTool does not know; check for typos: {', '.join(words)}")
+        except (urllib.error.URLError, TimeoutError, ValueError, KeyError) as exc:
+            print(f"{path}: LanguageTool at {lt_url} not used: {exc}", file=sys.stderr)
+
     found.sort(key=lambda f: (f.line, f.level != "error"))
     return lang, found
 
@@ -338,6 +404,12 @@ def main() -> int:
     parser.add_argument("files", nargs="+", type=Path)
     parser.add_argument("--lang", choices=["de", "en"], help="force a language instead of detecting it per file")
     parser.add_argument("--format", choices=["text", "json"], default="text")
+    parser.add_argument(
+        "--languagetool",
+        default=os.environ.get("LANGUAGETOOL_URL"),
+        metavar="URL",
+        help="LanguageTool server for grammar and spelling, e.g. http://127.0.0.1:8010 (default: $LANGUAGETOOL_URL)",
+    )
     args = parser.parse_args()
 
     failed = False
@@ -347,7 +419,7 @@ def main() -> int:
             print(f"{path}: not a file", file=sys.stderr)
             failed = True
             continue
-        lang, found = check(path, args.lang)
+        lang, found = check(path, args.lang, args.languagetool)
         failed = failed or any(f.level == "error" for f in found)
         report.append({"file": str(path), "lang": lang, "findings": [asdict(f) for f in found]})
 

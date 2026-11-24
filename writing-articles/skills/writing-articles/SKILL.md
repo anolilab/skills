@@ -77,6 +77,15 @@ python3 <skill-dir>/scripts/style_check.py content/blog/post.mdx content/blog/po
 
 Errors must be fixed. Warnings are leads to confirm in context, not verdicts.
 
+For grammar and spelling, the checker can also ask a LanguageTool server, which finds
+what pattern rules cannot: case and agreement after edits, comma errors, "das"/"dass".
+Pass `--languagetool http://127.0.0.1:8010` or set `LANGUAGETOOL_URL`. A local server
+keeps drafts on the machine (`docker run -d -p 127.0.0.1:8010:8010
+erikvl87/languagetool`); a public one sends the text to that service, so use it only
+with the user's consent. English follows the spelling the text already uses, British
+or American. Unknown words come as one list per file: check it for typos, names are
+expected there. Without the option, the checker makes no network calls.
+
 ## Workflow
 
 Copy this checklist into your reply and keep it updated:
