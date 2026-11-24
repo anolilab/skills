@@ -1,3 +1,9 @@
+## writing-articles [1.2.0](https://github.com/anolilab/skills/compare/writing-articles@1.1.0...writing-articles@1.2.0) (2026-11-24)
+
+### Features
+
+* **writing-articles:** write text that does not read as generated ([15c7c2d](https://github.com/anolilab/skills/commit/15c7c2d2d3f48abf3d796e4684b72c4ea3d23c61))
+
 ## writing-articles [1.1.0](https://github.com/anolilab/skills/compare/writing-articles@1.0.0...writing-articles@1.1.0) (2026-11-24)
 
 ### Features
