@@ -1,3 +1,9 @@
+## writing-articles [1.3.0](https://github.com/anolilab/skills/compare/writing-articles@1.2.0...writing-articles@1.3.0) (2026-11-24)
+
+### Features
+
+* **writing-articles:** optional grammar and spelling check with LanguageTool ([182fa5d](https://github.com/anolilab/skills/commit/182fa5ded07d4cf905b81b6f23e7faad4f3f8974))
+
 ## writing-articles [1.2.0](https://github.com/anolilab/skills/compare/writing-articles@1.1.0...writing-articles@1.2.0) (2026-11-24)
 
 ### Features
