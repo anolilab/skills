@@ -1,3 +1,9 @@
+## writing-articles [1.1.0](https://github.com/anolilab/skills/compare/writing-articles@1.0.0...writing-articles@1.1.0) (2026-11-24)
+
+### Features
+
+* **writing-articles:** structure articles for search and AI answers ([326b7dc](https://github.com/anolilab/skills/commit/326b7dc58f41f349f4f9ddc2cd0742a96777b4ec))
+
 ## writing-articles 1.0.0 (2026-11-17)
 
 ### Features
