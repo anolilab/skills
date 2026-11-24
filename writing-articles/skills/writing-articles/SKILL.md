@@ -109,7 +109,9 @@ Write a short brief and show it before researching. It names:
   question or a different angle; a summary of other pages does not earn a ranking;
 - the call to action from the context file that fits the question, and whether
   affiliate links fit at all;
-- the questions to the author whose answers become first-hand material.
+- the questions to the author whose answers become first-hand material, and a request
+  for three to five sentences in their own words on the question (see
+  [references/human-voice.md](references/human-voice.md)).
 
 When the user said to go ahead without stopping, write the brief into the report
 instead and continue.
@@ -141,6 +143,13 @@ screenshots of using it, or a video they recorded, with a marker naming the exac
 screen or moment needed; never use a vendor's marketing image as proof of use. Use the
 project's components (comparison cards, callouts, the call to action block) as the
 context file describes, and nothing it does not list.
+
+Build the verdict sections around the author's own sentences, kept close to their
+wording. Then do one rhythm pass from
+[references/human-voice.md](references/human-voice.md): vary sentence length, turn
+colon and semicolon hinges into plain sentences, and vary how sentences open. A text
+that is correct but evenly built reads as generated to readers and to AI-text
+detectors, and restyling alone does not fix that; the author's material does.
 
 ### 5. Call to action and links
 

@@ -46,7 +46,9 @@ Before the first edit, list what must survive. Compare it again after the last e
 3. Fix substance first: a paragraph that repeats the previous one, a sentence that
    says nothing, an unclear reference ("dies", "das" with no clear antecedent).
 4. Then the language rules for the text's language: `german.md` or
-   `english.md`, and the general list in `style.md`.
+   `english.md`, and the general list in `style.md`. When the request is that the
+   text reads as AI-written, also do the rhythm pass from `human-voice.md`, and say
+   that only the author's own sentences change how the text reads at its core.
 5. Then typography and numbers.
 6. Read it once more aloud in your head, slowly, for spelling, grammar, and agreement
    (German case endings and gender after edits are where new errors appear).
