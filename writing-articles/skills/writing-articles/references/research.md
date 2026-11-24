@@ -42,5 +42,10 @@ and link to the source. Never copy them from another article.
 
 Before drafting, write one sentence: "This article adds ___ that the top results do
 not." Valid answers: the author's own measurement, a worked example from a real
-project (with the author's input), a method for choosing, a clear verdict with
-reasons, a comparison along criteria the others skip. "A better summary" is not one.
+project (with the author's input), screenshots or a recording of the author using
+the tools, a method for choosing, a clear verdict with reasons, a comparison along
+criteria the others skip. "A better summary" is not one.
+
+Note how the AI answers for the question describe each option ("best for", price,
+specialty). Where they are wrong or vague, the article's verdicts and table are the
+place to state it plainly, with a source.

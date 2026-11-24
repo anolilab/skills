@@ -6,6 +6,10 @@
 - Its frontmatter has `title`, `description`, `published` in `YYYY-MM-DD` form, `lang: de`, and a `tags` array.
 - The first paragraph after the frontmatter says which tool suits which kind of company.
 - The article contains a Markdown table comparing n8n and Make.
+- A section or list saying how the two tools were compared appears before the first section about a single tool.
+- The slug (file name) and the title both contain "n8n" and "Make".
+- Each tool's section has a line saying which kind of company it is best for.
+- If the article has an FAQ, each question is a `###` heading and each answer is at most three sentences.
 - It addresses the reader with "Sie" and never with "du".
 - `<ServiceCta slug="workflow-automation"` appears exactly once, after the comparison sections.
 - Every `<Affiliate id="...">` uses an id from `src/data/affiliates.ts`; if any paid id is used, the frontmatter has `affiliate: true`.
